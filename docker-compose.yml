@@ -1,0 +1,49 @@
+networks:
+  vault-network:
+    driver: bridge
+
+services:
+  vault:
+    image: hashicorp/vault:1.21.1
+    container_name: vault
+    hostname: vault
+    # cap_add:
+    #   - IPC_LOCK
+    environment:
+      SKIP_SETCAP: 'true'
+      SKIP_CHOWN: 'true'
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./vault-data:/vault/data:rw
+      - ./vault/vault-config.hcl:/vault/config.hcl:ro
+      - ./certs/vault/ca_chain.pem:/vault/ca.pem:ro
+      - ./certs/vault:/vault/certs:ro
+    command: server -config=/vault/config.hcl
+    networks:
+      - vault-network
+    #restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "8200"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  postgres_db:
+    image: postgres:18.1
+    container_name: postgres_db
+    hostname: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: agresttest
+    ports:
+      - "5432:5432"
+    networks:
+      - vault-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h localhost", "-p 5432", "-U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 3

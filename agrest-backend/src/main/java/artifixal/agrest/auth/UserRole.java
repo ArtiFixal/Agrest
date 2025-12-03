@@ -1,0 +1,41 @@
+package artifixal.agrest.auth;
+
+/**
+ * Roles defining user permissions.
+ */
+public enum UserRole {
+    ANALYST(0),
+    USER(1),
+    ADMIN(2);
+    
+    private final int roleID;
+
+    private UserRole(int value){
+        roleID=value;
+    }
+
+    public int getRoleID(){
+        return roleID;
+    }
+
+    @Override
+    public String toString(){
+        return switch(this){
+            case ANALYST -> "ANALYST";
+            case USER -> "USER";
+            case ADMIN -> "ADMIN";
+            default->
+                throw new IllegalArgumentException("Unknown UserRole enum value");
+        };
+    }
+    
+    public final static UserRole fromInt(int role){
+        return switch(role){
+            case 0 -> ANALYST;
+            case 1 -> USER;
+            case 2 -> ADMIN;
+            default->
+                throw new IllegalArgumentException("Unknown UserRole value");
+        };
+    }
+}

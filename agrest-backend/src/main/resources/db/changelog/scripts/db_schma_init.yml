@@ -1,0 +1,111 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: ArtiFixal
+      changes:
+        # Users
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(80)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hash
+                  type: bytea
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: int
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expire_date
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: enabled
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: locked
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: forced_password_change
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: creator_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: editor_id
+                  type: uuid
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created
+                  type: timestamp
+                  defaultValueComputed: current_datetime
+                  constraints:
+                    nullable: false
+              - column:
+                  name: edited
+                  type: timestamp
+                  constraints:
+                    nullable: true
+
+  # Insert system for user ref
+  - changeSet:
+      id: 2
+      author: ArtiFixal
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: '00000000-0000-0000-0000-000000000000'
+              - column:
+                  name: email
+                  value: system
+              - column:
+                  name: hash
+                  value: '!'
+              - column:
+                  name: expire_date
+                  valueComputed: current_datetime
+              - column:
+                  name: enabled
+                  valueBoolean: false
+              - column:
+                  name: locked
+                  valueBoolean: true
+              - column:
+                  name: forced_password_change
+                  valueBoolean: false
+              - column:
+                  name: creator_id
+                  value: '00000000-0000-0000-0000-000000000000'
+              - column:
+                  name: created
+                  valueComputed: current_datetime
