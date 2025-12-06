@@ -15,7 +15,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.http.codec.json.JacksonJsonEncoder;
-import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.reactive.server.WebTestClient.ResponseSpec;
 import reactor.netty.http.client.HttpClient;
@@ -27,7 +26,6 @@ import tools.jackson.databind.module.SimpleModule;
  * Base class for integration tests.
  */
 @SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestExecutionListeners(listeners=LiquibaseTestExecutionListener.class,mergeMode=TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
 public abstract class IntegrationTest {
     
     @LocalServerPort
