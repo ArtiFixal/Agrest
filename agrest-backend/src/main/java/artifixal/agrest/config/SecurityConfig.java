@@ -37,7 +37,7 @@ public class SecurityConfig {
             .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
             .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
-            .cors(ServerHttpSecurity.CorsSpec::disable)
+            .cors((cors)->{})
             .logout(ServerHttpSecurity.LogoutSpec::disable)
             .authenticationManager(authManager)
             .securityContextRepository(contextRepo)
@@ -46,7 +46,9 @@ public class SecurityConfig {
                 ex.accessDeniedHandler(new HttpStatusServerAccessDeniedHandler(HttpStatus.FORBIDDEN));
             })
             .authorizeExchange((exchange)->{
-                exchange.pathMatchers(HttpMethod.POST,"/v1/auth/login","/v1/auth/refresh")
+                exchange.pathMatchers(HttpMethod.OPTIONS)
+                    .permitAll()
+                    .pathMatchers(HttpMethod.POST,"/v1/auth/login","/v1/auth/refresh")
                     .permitAll()
                     .anyExchange()
                     .authenticated();
