@@ -46,6 +46,15 @@ public class AuthControllerIntegrationTest extends IntegrationTest{
             .test(credentials);
     }
     
+    @Test
+    public void shouldNotLoginNonExistentUser(){
+        final String email="nouser@test.localhost";
+        
+        var credentials=new UserAuthenticationDTO(email,new SecurePassword("nouserpassword".getBytes()));
+        post("/v1/auth/login",HttpStatus.UNAUTHORIZED)
+            .test(credentials);
+    }
+    
     private void createUser(String email,String password){
         var user = UserCreationDTO.builder()
             .email(email)

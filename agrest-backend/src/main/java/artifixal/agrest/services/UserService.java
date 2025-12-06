@@ -9,6 +9,7 @@ import artifixal.agrest.dto.user.UserCreationDTO;
 import artifixal.agrest.dto.vault.SecureCharSecret;
 import artifixal.agrest.entity.User;
 import artifixal.agrest.exceptions.AuthenticationException;
+import artifixal.agrest.exceptions.EntityNotFoundException;
 import artifixal.agrest.token.paseto.PasetoService;
 import artifixal.paseto4jutils.ParsedToken;
 import com.password4j.Password;
@@ -20,9 +21,11 @@ import org.identityconnectors.common.ByteUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.http.HttpCookie;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 /**
@@ -101,8 +104,10 @@ public class UserService {
      */
     public Mono<CookieTokenPair> login(UserAuthenticationDTO credentials){
         return repo.findByEmail(credentials.email())
+            .switchIfEmpty(Mono.error(new EntityNotFoundException("User","")))
             // Prevent timing attacks if no user with thiat email.
             .onErrorResume((t)->{
+                log.debug("User not found");
                 byte[] randomBytes=ByteUtil.randomBytes(HASH_BYTES);
                 Password.check(credentials.password().getValue(),randomBytes)
                     .withArgon2();
@@ -116,7 +121,9 @@ public class UserService {
                     throw new AuthenticationException("Invalid credentials");
                 log.info("User {} logged in",user.getId().toString());
                 return createTokenCookies(user);
-            });
+            })
+            // Transform all exceptions to UNAUTHORIZED
+            .onErrorResume((err)->Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED,err.getMessage())));
     }
     
     /**

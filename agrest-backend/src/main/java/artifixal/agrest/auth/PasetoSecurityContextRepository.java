@@ -1,6 +1,5 @@
 package artifixal.agrest.auth;
 
-import artifixal.agrest.exceptions.AuthenticationException;
 import artifixal.agrest.services.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpCookie;
@@ -32,7 +31,7 @@ public class PasetoSecurityContextRepository implements ServerSecurityContextRep
             .getCookies()
             .getFirst(UserService.ACCESS_TOKEN_COOKIE_NAME);
         if(accessTokenCookie==null)
-            throw new AuthenticationException("Access token is null");
+            return Mono.empty();
         return Mono.just(accessTokenCookie)
             .flatMap((token)->{
                 var authToken=new UsernamePasswordAuthenticationToken(token,token);
