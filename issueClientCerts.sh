@@ -4,6 +4,7 @@
 ###
 CLIENT_CERTS="certs/client"
 SHM_CERTS="/dev/shm/vault/certs"
+SHM_SECRETS="/dev/shm/vault/secrets"
 
 export VAULT_ADDR="https://localhost:8200"
 export VAULT_CACERT="certs/root/root-ca.crt"
@@ -31,7 +32,7 @@ createStores(){
   # Tmp p12 for ssl
   echo "[Info]: Creating agrest-keystore"
   openssl pkcs12 -export -inkey "$SHM_CERTS/agrest-server.key" \
-    -in "$SHM_CERTS/agrest-server.crt" \
+    -in "$SHM_CERTS/agrest-server.pem" \
     -out "$SHM_CERTS/agrest-server.p12" \
     -name "ssl-cert" \
     -passout "pass:$PASS_SERVER"
@@ -81,6 +82,15 @@ createStores(){
     -storetype PKCS12 \
     -storepass "$PASS_TRUST_STORE"
   echo "[Info]: agrest-truststore created"
+
+  echo "[Info]: Encrypting .env"
+  echo "KeyStore: $PASS_KEY_STORE" > "$SHM_SECRETS/.env"
+  echo "$PASS_KEY_STORE" > "$SHM_SECRETS/keystore"
+  echo "TrustStore: $PASS_TRUST_STORE" >> "$SHM_SECRETS/.env"
+  echo "$PASS_TRUST_STORE" > "$SHM_SECRETS/truststore"
+
+  gpg --batch --encrypt --recipient "$HOSTNAME@localhost" --output agrest-backend/.enc.env "$SHM_SECRETS/.env"
+  rm "$SHM_SECRETS/.env"
   umask 0022
 }
 
@@ -112,7 +122,7 @@ vault login -method=userpass username=admin password="$password"
   echo "[Info]: Creating server cert for spring"  
   # Create role for server cert
   vault write pki-intermediate/roles/agrest-app-server \
-    allowed_domains="localhost,agrest-app" \
+    allowed_domains="localhost,agrest-server" \
     allow_localhost=true \
     allow_subdomains=true \
     allow_bare_domains=true \
@@ -122,14 +132,16 @@ vault login -method=userpass username=admin password="$password"
     max_ttl=365d
 
   vault write -format=json pki-intermediate/issue/agrest-app-server \
-    common_name="agrest-app" > "$RESPONSE"
+    common_name="localhost" \
+    alt_names="localhost,agrest-server" > "$RESPONSE"
 
   cat "$RESPONSE" | grep -oP '"certificate"\s*:\s*"\K[^"]+' | sed 's/\\n/\n/g' \
     > "$SHM_CERTS/agrest-server.crt"
   cat "$RESPONSE" | grep -oP '"private_key"\s*:\s*"\K[^"]+' | sed 's/\\n/\n/g' \
     > "$SHM_CERTS/agrest-server.key"
   cat "$RESPONSE" | grep -oP '"issuing_ca"\s*:\s*"\K[^"]+' | sed 's/\\n/\n/g' \
-    > "$SHM_CERTS/agrest-server.pem"
+    > "$SHM_CERTS/agrest-server-ica.pem"
   rm "$RESPONSE"
 
+  cat "$SHM_CERTS/agrest-server.crt" "$SHM_CERTS/agrest-server-ica.pem" > "$SHM_CERTS/agrest-server.pem"
 createStores

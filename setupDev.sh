@@ -328,63 +328,6 @@ EOF
 }
 
 createStores(){
-  umask 177
-  PASS_SERVER=$(openssl rand -base64 16)
-
-  # Tmp p12 for ssl
-  echo "[Info]: Creating agrest-keystore"
-  openssl pkcs12 -export -inkey "$SHM_CERTS/agrest-server.key" \
-    -in "$SHM_CERTS/agrest-server.crt" \
-    -out "$SHM_CERTS/agrest-server.p12" \
-    -name "ssl-cert" \
-    -passout "pass:$PASS_SERVER"
-  rm "$SHM_CERTS/agrest-server.crt" "$SHM_CERTS/agrest-server.key"
-  echo "[Info]: Created agrest-server P12"
-
-  PASS_CLIENT=$(openssl rand -base64 16)
-  # Tmp p12 for vault
-  openssl pkcs12 -export -inkey "$SHM_CERTS/agrest-client.key" \
-    -in "$SHM_CERTS/agrest-client.crt" \
-    -out "$SHM_CERTS/agrest-client.p12" \
-    -name "vault-cert" \
-    -passout "pass:$PASS_CLIENT"
-  rm "$SHM_CERTS/agrest-client.crt" "$SHM_CERTS/agrest-client.key"
-  echo "[Info]: Created agrest-vault P12"
-
-  yellow "Enter password for new KeyStore: "
-  read -s PASS_KEY_STORE
-  echo
-  # Merge p12 to keystore
-  keytool -importkeystore -srckeystore "$SHM_CERTS/agrest-server.p12" \
-    -srcstoretype PKCS12 \
-    -destkeystore agrest-backend/agrest-keystore.p12 \
-    -deststoretype PKCS12 \
-    -srcstorepass "$PASS_SERVER" \
-    -deststorepass "$PASS_KEY_STORE"
-
-  keytool -importkeystore -srckeystore "$SHM_CERTS/agrest-client.p12" \
-    -srcstoretype PKCS12 \
-    -destkeystore agrest-backend/agrest-keystore.p12 \
-    -deststoretype PKCS12 \
-    -srcstorepass "$PASS_CLIENT" \
-    -deststorepass "$PASS_KEY_STORE"
-
-  rm "$SHM_CERTS/agrest-server.p12" "$SHM_CERTS/agrest-client.p12"
-  echo "[Info]: agrest-keystore created"
-
-  yellow "Enter password for new TrustStore: "
-  read -s PASS_TRUST_STORE
-  echo
-
-  echo "[Info]: Creating agrest-truststore"
-  keytool -import -trustcacerts \
-    -alias root-ca \
-    -file "$VAULT_CACERT" \
-    -keystore agrest-backend/agrest-truststore.p12 \
-    -storetype PKCS12 \
-    -storepass "$PASS_TRUST_STORE"
-  echo "[Info]: agrest-truststore created"
-
   umask 0022
   echo "[Info]: Creating GPG keypair"
   gpg --batch --quick-gen-key "Agrest-app config key <$HOSTNAME@localhost>" ed25519 cert,sign 0
@@ -393,16 +336,7 @@ createStores(){
   # Export public key
   gpg -a --export "$HOSTNAME@localhost" > agrest-backend/storeKey.asc
 
-  umask 177
-  echo "[Info]: Encrypting .env"
-  echo "KeyStore: $PASS_KEY_STORE" > "$SHM_SECRETS/.env"
-  echo "$PASS_KEY_STORE" > "$SHM_SECRETS/keystore"
-  echo "TrustStore: $PASS_TRUST_STORE" >> "$SHM_SECRETS/.env"
-  echo "$PASS_TRUST_STORE" > "$SHM_SECRETS/truststore"
-
-  gpg --batch --encrypt --recipient "$HOSTNAME@localhost" --output agrest-backend/.enc.env "$SHM_SECRETS/.env"
-  rm "$SHM_SECRETS/.env"
-  umask 0022
+  bash issueClientCerts.sh
 }
 
 setupUserPass(){
