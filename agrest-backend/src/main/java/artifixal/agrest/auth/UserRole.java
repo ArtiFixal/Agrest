@@ -1,5 +1,7 @@
 package artifixal.agrest.auth;
 
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
 /**
  * Roles defining user permissions.
  */
@@ -27,6 +29,10 @@ public enum UserRole {
             default->
                 throw new IllegalArgumentException("Unknown UserRole enum value");
         };
+    }
+    
+    public SimpleGrantedAuthority toAuthority(){
+        return new SimpleGrantedAuthority(toString());
     }
     
     public final static UserRole fromInt(int role){

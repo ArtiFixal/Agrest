@@ -7,13 +7,11 @@ import artifixal.agrest.services.VaultService;
 import artifixal.paseto4jutils.ParsedToken;
 import artifixal.paseto4jutils.PasetoBuilder;
 import artifixal.paseto4jutils.PasetoParser;
-import jakarta.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.EdECPoint;
-import java.security.spec.EdECPrivateKeySpec;
 import java.security.spec.EdECPublicKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
@@ -89,8 +87,8 @@ public class PasetoService {
         SimpleGrantedAuthority role;
         try{
             int roleValue=Integer.parseInt(token.get("role"));
-            role=new SimpleGrantedAuthority(UserRole.fromInt(roleValue)
-                .toString());
+            role=UserRole.fromInt(roleValue)
+                .toAuthority();
         }catch(NumberFormatException e){
             throw new PasetoException("Malformed token");
         }
