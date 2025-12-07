@@ -1,4 +1,4 @@
-package artifixal.agrest.config;
+package artifixal.agrest.config.init;
 
 import artifixal.agrest.dto.vault.SingleKeyDTO;
 import jakarta.annotation.PostConstruct;

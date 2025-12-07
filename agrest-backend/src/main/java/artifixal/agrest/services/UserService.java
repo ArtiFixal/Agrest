@@ -66,7 +66,7 @@ public class UserService {
             .build();
     }
     
-    private byte[] hashPassword(SecurePassword password){
+    public byte[] hashPassword(SecurePassword password){
         try(password){
             byte[] hash=Password.hash(password.getValue())
             .addPepper()
