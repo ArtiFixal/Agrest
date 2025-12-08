@@ -69,7 +69,7 @@ public class UserService {
     public byte[] hashPassword(SecurePassword password){
         try(password){
             byte[] hash=Password.hash(password.getValue())
-            .addPepper()
+            .addPepper(pepper)
             .addRandomSalt()
             .withArgon2()
             .getResultAsBytes();
@@ -116,6 +116,7 @@ public class UserService {
             // Success
             .map((user)->{
                 boolean valid=Password.check(credentials.password().getValue(),user.getHash())
+                    .addPepper(pepper)
                     .withArgon2();
                 if(!valid)
                     throw new AuthenticationException("Invalid credentials");
