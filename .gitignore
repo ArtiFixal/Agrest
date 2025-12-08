@@ -34,7 +34,7 @@ build/
 
 ### dev data ###
 certs
-vault
+./vault
 vault-data
 **/*.env
 **/*.enc.env
