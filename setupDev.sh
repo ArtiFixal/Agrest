@@ -19,7 +19,7 @@ source scriptFunctions.sh
 mkdir vault-data
 chmod 777 vault-data
 mkdir vault
-mkdir -p certs/{root,client,vault}
+mkdir -p certs/{root,client,vault,frontend}
 mkdir -p /dev/shm/vault/{secrets,certs}
 chmod 700 /dev/shm/vault /dev/shm/vault/certs /dev/shm/vault/secrets
 
