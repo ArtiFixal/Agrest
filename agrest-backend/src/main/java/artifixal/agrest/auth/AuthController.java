@@ -2,16 +2,15 @@ package artifixal.agrest.auth;
 
 import artifixal.agrest.dto.user.UserAuthenticationDTO;
 import artifixal.agrest.services.UserService;
-import java.util.function.Function;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpCookie;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.server.ServerRequest;
-import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 /**
@@ -24,25 +23,25 @@ import reactor.core.publisher.Mono;
 public class AuthController {
     
     private final UserService userService;
-    
-    private Function<CookieTokenPair,Mono<ServerResponse>> okWithTokenCookies(){
-        return (success)->ServerResponse.ok()
-            .cookie(success.accessTokenCookie())
-            .cookie(success.refreshTokenCookie())
-            .build();
-    }
 
     @PostMapping("/login")
-    public Mono<ServerResponse> login(@RequestBody UserAuthenticationDTO credentials){
+    public Mono<AuthenticationResultDTO> login(@RequestBody UserAuthenticationDTO credentials, ServerHttpResponse response){
         return userService.login(credentials)
-            .flatMap(okWithTokenCookies());
+            .map((login)->{
+                response.addCookie(login.cookies().accessTokenCookie());
+                response.addCookie(login.cookies().refreshTokenCookie());
+                return login.userData();
+            });
     }
     
     @PostMapping("/refresh")
-    public Mono<ServerResponse> refresh(ServerRequest request){
+    public Mono<Void> refresh(ServerRequest request, ServerHttpResponse response){
         HttpCookie refreshToken=request.cookies()
             .getFirst(UserService.REFRESH_TOKEN_COOKIE_NAME);
         return userService.refreshAccessToken(refreshToken)
-            .flatMap(okWithTokenCookies());
+            .flatMap((token)->{
+                response.addCookie(token);
+                return Mono.empty();
+            });
     }
 }

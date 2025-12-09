@@ -1,6 +1,8 @@
 package artifixal.agrest.services;
 
+import artifixal.agrest.auth.AuthenticationResultDTO;
 import artifixal.agrest.auth.CookieTokenPair;
+import artifixal.agrest.auth.LoginResult;
 import artifixal.agrest.dto.user.UserAuthenticationDTO;
 import artifixal.agrest.auth.UserRole;
 import artifixal.agrest.dto.user.SecurePassword;
@@ -102,7 +104,7 @@ public class UserService {
      * 
      * @return Refresh and access tokens.
      */
-    public Mono<CookieTokenPair> login(UserAuthenticationDTO credentials){
+    public Mono<LoginResult> login(UserAuthenticationDTO credentials){
         return repo.findByEmail(credentials.email())
             .switchIfEmpty(Mono.error(new EntityNotFoundException("User","")))
             // Prevent timing attacks if no user with thiat email.
@@ -121,7 +123,8 @@ public class UserService {
                 if(!valid)
                     throw new AuthenticationException("Invalid credentials");
                 log.info("User {} logged in",user.getId().toString());
-                return createTokenCookies(user);
+                return new LoginResult(createTokenCookies(user),new AuthenticationResultDTO(
+                    user.getId().toString(),user.getEmail(),user.getRole()));
             })
             // Transform all exceptions to UNAUTHORIZED
             .onErrorResume((err)->Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED,err.getMessage())));
@@ -134,7 +137,7 @@ public class UserService {
      * 
      * @return Rotated tokens.
      */
-    public Mono<CookieTokenPair> refreshAccessToken(HttpCookie refreshToken){
+    public Mono<ResponseCookie> refreshAccessToken(HttpCookie refreshToken){
         if(refreshToken==null)
             throw new AuthenticationException("Missing refresh token");
         if(!refreshToken.getName().equals(REFRESH_TOKEN_COOKIE_NAME))
@@ -145,7 +148,11 @@ public class UserService {
                 return UUID.fromString(token.getSubject());
             })
             .flatMap((userID)->repo.findById(userID))
-            .map((user)->createTokenCookies(user));
+            .map((user)->createTokenCookie(REFRESH_TOKEN_COOKIE_NAME,
+                pasetoService.createAccessTokenForUser(user),
+                "/v1/auth/refresh",
+                PasetoService.REFRESH_TOKEN_VALID_PERIOD
+            ));
     }
     
     @PreAuthorize("hasRole('ADMIN')")
