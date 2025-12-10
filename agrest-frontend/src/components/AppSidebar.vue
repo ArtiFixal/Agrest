@@ -13,9 +13,25 @@ import {
   SidebarProvider,
 } from '@/components/ui/sidebar'
 import { useAuthStore } from '@/stores/AuthStore'
+import { Blocks, FileText, LayoutDashboard, Scan, Target } from 'lucide-vue-next'
+import type { FunctionalComponent } from 'vue'
 import { RouterLink } from 'vue-router'
 
 const authStore = useAuthStore()
+
+interface NavEntry {
+  name: string
+  href: string
+  icon: FunctionalComponent
+}
+
+const mainNav: Array<NavEntry> = [
+  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Targets', href: '/targets', icon: Target },
+  { name: 'Scans', href: '/scans', icon: Scan },
+  { name: 'Reports', href: '/reports', icon: FileText },
+  { name: 'Integrations', href: '/integrations', icon: Blocks },
+]
 </script>
 
 <template>
@@ -29,29 +45,16 @@ const authStore = useAuthStore()
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <RouterLink to="/" class="w-full">Dashboard</RouterLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <RouterLink to="/Targets">Targets</RouterLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <RouterLink to="/Scans">Scans</RouterLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <RouterLink to="/Reports">Reports</RouterLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <RouterLink to="/Integrations">Integrations</RouterLink>
+              <SidebarMenuItem v-for="entry in mainNav" :key="entry.href">
+                <SidebarMenuButton asChild>
+                  <RouterLink
+                    :to="entry.href"
+                    exactActiveClass="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    class="hover:bg-sidebar-accent/50"
+                  >
+                    <component :is="entry.icon" class="w-4 h-4" />
+                    {{ entry.name }}
+                  </RouterLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
