@@ -11,38 +11,38 @@ import org.springframework.data.annotation.LastModifiedDate;
 
 /**
  * Base class for entities which will support auditing.
- * 
+ *
  * @param <T> ID type.
  */
 @Getter
 @Setter
-public abstract class AuditableEntity<T> extends BaseEntity<T>{
+public abstract class AuditableEntity<T> extends BaseEntity<T> {
 
-    public AuditableEntity(){
+    public AuditableEntity() {
         super(null);
     }
 
-    public AuditableEntity(T id){
+    public AuditableEntity(T id) {
         super(id);
     }
 
-    public AuditableEntity(T id,UUID creatorID,UUID editorID,LocalDateTime created,LocalDateTime edited){
+    public AuditableEntity(T id, UUID creatorID, UUID editorID, LocalDateTime created, LocalDateTime edited) {
         super(id);
-        this.creatorID=creatorID;
-        this.editorID=editorID;
-        this.created=created;
-        this.edited=edited;
+        this.creatorID = creatorID;
+        this.editorID = editorID;
+        this.created = created;
+        this.edited = edited;
     }
-    
+
     @CreatedBy
     private UUID creatorID;
-    
+
     @LastModifiedBy
     private UUID editorID;
-    
+
     @CreatedDate
     private LocalDateTime created;
-    
+
     @LastModifiedDate
     private LocalDateTime edited;
 }

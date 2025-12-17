@@ -9,16 +9,16 @@ import tools.jackson.databind.annotation.JsonDeserialize;
 /**
  * Wrapper around byte array to avoid String allocation.
  */
-@JsonDeserialize(using=SecurePasswordDeserializer.class)
-public class SecurePassword implements AutoCloseable,Closeable,Eraseable{
-    
+@JsonDeserialize(using = SecurePasswordDeserializer.class)
+public class SecurePassword implements AutoCloseable, Closeable, Eraseable {
+
     private byte[] value;
 
-    public SecurePassword(byte[] value){
-        this.value=value;
+    public SecurePassword(byte[] value) {
+        this.value = value;
     }
 
-    public byte[] getValue(){
+    public byte[] getValue() {
         return value;
     }
 
@@ -28,7 +28,7 @@ public class SecurePassword implements AutoCloseable,Closeable,Eraseable{
     }
 
     @Override
-    public void clear(){
-        Arrays.fill(value,(byte)0);
+    public void clear() {
+        Arrays.fill(value, (byte) 0);
     }
 }

@@ -3,10 +3,10 @@ package artifixal.agrest.dto.vault;
 /**
  * DTO transporting single key from Vault.
  */
-public record SingleKeyDTO(SecureSecret key) implements Eraseable{
+public record SingleKeyDTO(SecureSecret key) implements Eraseable {
 
     @Override
-    public void clear(){
+    public void clear() {
         key.clear();
     }
 }

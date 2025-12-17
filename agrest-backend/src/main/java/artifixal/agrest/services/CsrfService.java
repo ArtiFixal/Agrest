@@ -20,62 +20,59 @@ import reactor.core.publisher.Mono;
 @DependsOn("vaultInitRunner")
 @AllArgsConstructor
 public class CsrfService {
-    
+
     private final VaultService vaultService;
-    
-    private Mac createMacFunction(SecureSecret key){
-        try{
-            Mac hmacSha256=Mac.getInstance("HmacSHA256");
-            SecretKeySpec keySpec=new SecretKeySpec(key.value(),"HmacSHA256");
+
+    private Mac createMacFunction(SecureSecret key) {
+        try {
+            Mac hmacSha256 = Mac.getInstance("HmacSHA256");
+            SecretKeySpec keySpec = new SecretKeySpec(key.value(), "HmacSHA256");
             hmacSha256.init(keySpec);
             return hmacSha256;
-        }catch(Exception e){
+        } catch (Exception e) {
             throw new RuntimeException("Failed to create Mac Function");
         }
     }
-    
-    private Mono<byte[]> calcHmac(String token){
+
+    private Mono<byte[]> calcHmac(String token) {
         return vaultService.getCsrfKey()
-            .map((key)->createMacFunction(key.getData().key()))
-            .map((hmacFunction)->{
+            .map((key) -> createMacFunction(key.getData().key()))
+            .map((hmacFunction) -> {
                 return hmacFunction.doFinal(token.getBytes());
             });
     }
-    
+
     /**
      * @return Random CSRF token.
      */
-    public Mono<String> generateToken(){
+    public Mono<String> generateToken() {
         return ReactiveSecurityContextHolder.getContext()
-            .flatMap((auth)->{
-                UUID nonce=UUID.randomUUID();
-                String token=nonce.toString()+"!"+auth.getAuthentication()
+            .flatMap((auth) -> {
+                UUID nonce = UUID.randomUUID();
+                String token = nonce.toString() + "!" + auth.getAuthentication()
                     .getPrincipal();
-                return calcHmac(token)
-                    .map((hmac)->{
-                        return token+"."+String.valueOf(hmac);
-                    });
+                return calcHmac(token).map((hmac) -> {
+                    return token + "." + String.valueOf(hmac);
+                });
             });
     }
-    
+
     /**
      * @return Is token valid.
      */
-    public Mono<Boolean> validateToken(String token){
-        String[] tokenParts=token.split("\\.");
-        if(tokenParts.length!=2)
+    public Mono<Boolean> validateToken(String token) {
+        String[] tokenParts = token.split("\\.");
+        if (tokenParts.length != 2)
             throw new CsrfTokenException("Invalid CSRF token");
-        String[] tokenData=tokenParts[0].split("\\!");
+        String[] tokenData = tokenParts[0].split("\\!");
         return ReactiveSecurityContextHolder.getContext()
-            .map((auth)->auth.getAuthentication()
-                .getPrincipal()
-                .toString()
-            ).flatMap((user)->{
-                if(!user.equalsIgnoreCase(tokenData[1]))
+            .map((auth) -> auth.getAuthentication().getPrincipal().toString())
+            .flatMap((user) -> {
+                if (!user.equalsIgnoreCase(tokenData[1]))
                     throw new CsrfTokenException("Token not issued for this principal");
-                byte[] receivedHmac=Hex.decode(tokenParts[1]);
+                byte[] receivedHmac = Hex.decode(tokenParts[1]);
                 return calcHmac(tokenParts[0])
-                    .map((calculatedHmac)->MessageDigest.isEqual(receivedHmac,calculatedHmac));
+                    .map((calculatedHmac) -> MessageDigest.isEqual(receivedHmac, calculatedHmac));
             });
     }
 }

@@ -15,25 +15,25 @@ import tools.jackson.databind.ValueDeserializer;
 /**
  * Deserialzies {@code SecurePassword} from JSON.
  */
-public class SecurePasswordDeserializer extends ValueDeserializer<SecurePassword>{
+public class SecurePasswordDeserializer extends ValueDeserializer<SecurePassword> {
 
     @Override
-    public SecurePassword deserialize(JsonParser p,DeserializationContext ctxt) throws JacksonException{
-        final CharsetEncoder encoder=StandardCharsets.UTF_8
+    public SecurePassword deserialize(JsonParser p, DeserializationContext ctxt) throws JacksonException {
+        final CharsetEncoder encoder = StandardCharsets.UTF_8
             .newEncoder()
             .onMalformedInput(CodingErrorAction.REPLACE)
             .onUnmappableCharacter(CodingErrorAction.REPLACE);
-        CharBuffer charBuff=CharBuffer.wrap(p.getStringCharacters(),
-            p.getStringOffset(),p.getStringLength());
-        ByteBuffer byteBuff=ByteBuffer.allocate(p.getStringLength()*4);
-        encoder.encode(charBuff,byteBuff,true);
+        CharBuffer charBuff = CharBuffer.wrap(p.getStringCharacters(),
+            p.getStringOffset(), p.getStringLength());
+        ByteBuffer byteBuff = ByteBuffer.allocate(p.getStringLength() * 4);
+        encoder.encode(charBuff, byteBuff, true);
         encoder.flush(byteBuff);
         byteBuff.flip();
-        int length=byteBuff.remaining();
-        byte[] secret=new byte[length];
+        int length = byteBuff.remaining();
+        byte[] secret = new byte[length];
         byteBuff.get(secret);
-        if(byteBuff.hasArray())
-            Arrays.fill(byteBuff.array(),(byte)0);
+        if (byteBuff.hasArray())
+            Arrays.fill(byteBuff.array(), (byte) 0);
         return new SecurePassword(secret);
     }
 }

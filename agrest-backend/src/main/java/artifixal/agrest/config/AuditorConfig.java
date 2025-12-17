@@ -9,7 +9,7 @@ import org.springframework.data.r2dbc.config.EnableR2dbcAuditing;
  */
 @Profile("!test")
 @Configuration
-@EnableR2dbcAuditing(modifyOnCreate=false)
+@EnableR2dbcAuditing(modifyOnCreate = false)
 public class AuditorConfig {
 
 }

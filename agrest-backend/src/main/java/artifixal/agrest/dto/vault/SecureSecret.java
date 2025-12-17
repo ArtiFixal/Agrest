@@ -8,8 +8,8 @@ import tools.jackson.databind.annotation.JsonDeserialize;
 /**
  * Wrapper around char array to prevent String allocation.
  */
-@JsonDeserialize(using=SecureSecretDeserializer.class)
-public record SecureSecret(byte[] value) implements AutoCloseable,Closeable,Eraseable{
+@JsonDeserialize(using = SecureSecretDeserializer.class)
+public record SecureSecret(byte[] value) implements AutoCloseable, Closeable, Eraseable {
 
     @Override
     public void close() {
@@ -17,7 +17,7 @@ public record SecureSecret(byte[] value) implements AutoCloseable,Closeable,Eras
     }
 
     @Override
-    public void clear(){
-        Arrays.fill(value,(byte)0);
+    public void clear() {
+        Arrays.fill(value, (byte) 0);
     }
 }

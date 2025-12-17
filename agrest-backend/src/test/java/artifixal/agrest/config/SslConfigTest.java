@@ -7,10 +7,10 @@ import org.springframework.http.HttpStatus;
 /**
  * Tests if {@code SslConfig} indicates upgrade requirement.
  */
-public class SslConfigTest extends IntegrationTest{
+public class SslConfigTest extends IntegrationTest {
 
     @Test
-    public void shouldAskForUpgrade(){
+    public void shouldAskForUpgrade() {
         http.mutate()
             .baseUrl("http://localhost:8080")
             .build()

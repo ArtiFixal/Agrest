@@ -14,20 +14,19 @@ import reactor.core.publisher.Mono;
 @RestController
 @AllArgsConstructor
 public class CsrfController {
-    
+
     private final CsrfService csrfService;
-    
+
     @GetMapping("/v1/csrf")
-    public Mono<ServerResponse> getCsrfToken(){
+    public Mono<ServerResponse> getCsrfToken() {
         return csrfService.generateToken()
-            .flatMap((token)->ServerResponse.ok()
-                .cookie(ResponseCookie.from("csrf",token)
+            .flatMap((token) -> ServerResponse.ok()
+                .cookie(ResponseCookie.from("csrf", token)
                     .path("/")
                     .sameSite("Strict")
                     .secure(true)
                     .maxAge(180)
-                    .build()
-                ).build()
-            );
+                    .build())
+                .build());
     }
 }

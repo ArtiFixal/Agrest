@@ -15,17 +15,16 @@ import reactor.core.publisher.Mono;
  */
 @Profile("!test")
 @Component
-public class AuditorProvider implements ReactiveAuditorAware<UUID>{
+public class AuditorProvider implements ReactiveAuditorAware<UUID> {
 
     @Override
-    public Mono<UUID> getCurrentAuditor(){
+    public Mono<UUID> getCurrentAuditor() {
         return ReactiveSecurityContextHolder.getContext()
             .map(SecurityContext::getAuthentication)
             .filter(Authentication::isAuthenticated)
-            .map(auth->{
-                return (UUID)auth.getPrincipal();
+            .map(auth -> {
+                return (UUID) auth.getPrincipal();
             })
-            .switchIfEmpty(Mono.error(()->
-                new AuthenticationException("Can't audite with unauthenticated user")));
+            .switchIfEmpty(Mono.error(() -> new AuthenticationException("Can't audite with unauthenticated user")));
     }
 }

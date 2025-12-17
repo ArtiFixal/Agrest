@@ -7,26 +7,26 @@ import org.springframework.data.domain.Persistable;
 
 /**
  * Base class for entities.
- * 
+ *
  * @param <T> ID type.
  */
 @Getter
 @Setter
-public abstract class BaseEntity<T> implements Persistable<T>{
-    
+public abstract class BaseEntity<T> implements Persistable<T> {
+
     @Id
     private T id;
 
-    public BaseEntity(){
-        id=null;
+    public BaseEntity() {
+        id = null;
     }
 
-    public BaseEntity(T id){
-        this.id=id;
+    public BaseEntity(T id) {
+        this.id = id;
     }
 
     @Override
-    public boolean isNew(){
-        return id==null;
+    public boolean isNew() {
+        return id == null;
     }
 }

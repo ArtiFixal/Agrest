@@ -12,13 +12,13 @@ import reactor.core.publisher.Mono;
  */
 @Component
 @AllArgsConstructor
-public class PasetoAuthenticationManager implements ReactiveAuthenticationManager{
-    
+public class PasetoAuthenticationManager implements ReactiveAuthenticationManager {
+
     private final PasetoService pasetoService;
 
     @Override
-    public Mono<Authentication> authenticate(Authentication authentication){
-        String token = (String)authentication.getCredentials();
+    public Mono<Authentication> authenticate(Authentication authentication) {
+        String token = (String) authentication.getCredentials();
         return pasetoService.validateToken(token);
     }
 }

@@ -11,16 +11,16 @@ import org.springframework.data.r2dbc.config.EnableR2dbcAuditing;
  * Auditor for testing purposes.
  */
 @Configuration
-@EnableR2dbcAuditing(auditorAwareRef="auditorProvider",modifyOnCreate=false)
+@EnableR2dbcAuditing(auditorAwareRef = "auditorProvider", modifyOnCreate = false)
 public class TestAuditorConfig {
 
-    private final static UUID TEST_UUID=UUID.fromString("00000000-0000-0000-0000-000000000000");
-    private final static AuditorProvider auditor=new AuditorProvider();
-    
+    private final static UUID TEST_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+    private final static AuditorProvider auditor = new AuditorProvider();
+
     @Bean
-    public ReactiveAuditorAware<UUID> auditorProvider(){
+    public ReactiveAuditorAware<UUID> auditorProvider() {
         // If no auth user use system ID
-        return ()->auditor.getCurrentAuditor()
+        return () -> auditor.getCurrentAuditor()
             .onErrorReturn(TEST_UUID);
     }
 }

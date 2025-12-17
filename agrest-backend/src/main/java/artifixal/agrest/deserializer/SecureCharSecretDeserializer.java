@@ -10,14 +10,12 @@ import tools.jackson.databind.ValueDeserializer;
 /**
  * Deserializes {@code SecureCharSecret} from JSON.
  */
-public class SecureCharSecretDeserializer extends ValueDeserializer<SecureCharSecret>{
+public class SecureCharSecretDeserializer extends ValueDeserializer<SecureCharSecret> {
 
     @Override
-    public SecureCharSecret deserialize(JsonParser p,DeserializationContext ctxt) throws JacksonException{
-        p.getStringCharacters();
-        int to=p.getStringOffset()+p.getStringLength();
-        char[] value=Arrays.copyOfRange(p.getStringCharacters(),p.getStringOffset(),to);
+    public SecureCharSecret deserialize(JsonParser p, DeserializationContext ctxt) throws JacksonException {
+        int to = p.getStringOffset() + p.getStringLength();
+        char[] value = Arrays.copyOfRange(p.getStringCharacters(), p.getStringOffset(), to);
         return new SecureCharSecret(value);
     }
 }
-

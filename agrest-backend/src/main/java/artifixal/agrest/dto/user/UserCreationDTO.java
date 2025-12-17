@@ -9,8 +9,8 @@ import lombok.experimental.SuperBuilder;
  */
 @Getter
 @SuperBuilder
-public class UserCreationDTO extends UserDTO{
-    
+public class UserCreationDTO extends UserDTO {
+
     @Setter
     private SecurePassword password;
 }

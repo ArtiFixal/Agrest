@@ -12,8 +12,8 @@ import lombok.experimental.SuperBuilder;
  */
 @Getter
 @SuperBuilder
-public class UserDTO extends BaseDTO<UUID>{
-    
+public class UserDTO extends BaseDTO<UUID> {
+
     @Email
     private String email;
     private LocalDateTime expireDate;

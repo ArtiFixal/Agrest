@@ -22,42 +22,41 @@ import org.springframework.vault.core.ReactiveVaultTemplate;
  */
 @Component
 @RequiredArgsConstructor
-public class DefaultUserInit implements CommandLineRunner{
-    
+public class DefaultUserInit implements CommandLineRunner {
+
     @Value("${spring.cloud.vault.kv.backend}")
     private String keyValPath;
-    
+
     @Value("${vault.path.app.init}")
     private String appInitPath;
-    
+
     private final UserRepository userRepo;
     private final UserService userService;
     private final ReactiveVaultTemplate vaultTemplate;
 
     @Override
-    public void run(String... args) throws Exception{
-        var k2=vaultTemplate.opsForVersionedKeyValue(keyValPath);
-        var initCheck=k2
+    public void run(String... args) throws Exception {
+        var k2 = vaultTemplate.opsForVersionedKeyValue(keyValPath);
+        var initCheck = k2
             .get(appInitPath)
-            .blockOptional(); 
-        if(initCheck.isEmpty())
-        {
-            byte[] hash=userService.hashPassword(new SecurePassword("NotDefaultAdminPassword1!".getBytes()));
-            User admin=new User("admin",hash,UserRole.ADMIN,LocalDateTime.MAX,true,false,true);
+            .blockOptional();
+        if (initCheck.isEmpty()) {
+            byte[] hash = userService.hashPassword(new SecurePassword("NotDefaultAdminPassword1!".getBytes()));
+            User admin = new User("admin", hash, UserRole.ADMIN, LocalDateTime.MAX, true, false, true);
             admin.setCreated(LocalDateTime.now());
-            UUID systemUserID=UUID.fromString("00000000-0000-0000-0000-000000000000");
+            UUID systemUserID = UUID.fromString("00000000-0000-0000-0000-000000000000");
             admin.setCreatorID(systemUserID);
-            UsernamePasswordAuthenticationToken systemUser=UsernamePasswordAuthenticationToken
-                .authenticated(systemUserID,null,
+            UsernamePasswordAuthenticationToken systemUser = UsernamePasswordAuthenticationToken
+                .authenticated(systemUserID, null,
                     Collections.singleton(UserRole.ADMIN.toAuthority()));
             userRepo.save(admin)
-                .flatMap((userInit)->{
-                    HashMap<String,String> initData=new HashMap<>();
-                    initData.put("userInit","true");
-                    return k2.put(appInitPath,initData);
+                .flatMap((userInit) -> {
+                    HashMap<String, String> initData = new HashMap<>();
+                    initData.put("userInit", "true");
+                    return k2.put(appInitPath, initData);
                 })
                 .contextWrite(ReactiveSecurityContextHolder.withAuthentication(systemUser))
                 .block();
-        }   
+        }
     }
 }

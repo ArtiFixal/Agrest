@@ -38,28 +38,28 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @RequiredArgsConstructor
 public class UserService {
-    public final static String ACCESS_TOKEN_COOKIE_NAME="access_token";
-    public final static String REFRESH_TOKEN_COOKIE_NAME="refresh_token";
-    
+    public final static String ACCESS_TOKEN_COOKIE_NAME = "access_token";
+    public final static String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
+
     @Value("${hash.argon2.length}")
     private int HASH_BYTES;
-    
+
     private SecureCharSecret pepper;
-    
+
     private final UserRepository repo;
     private final PasetoService pasetoService;
     private final VaultService vaultService;
-    
+
     @PostConstruct
-    private void fetchPepper(){
-        pepper=vaultService.getPepper()
+    private void fetchPepper() {
+        pepper = vaultService.getPepper()
             .block()
             .getData()
             .key();
     }
-    
-    private ResponseCookie createTokenCookie(String name,String value,String path,long maxAge){
-        return ResponseCookie.from(name,value)
+
+    private ResponseCookie createTokenCookie(String name, String value, String path, long maxAge) {
+        return ResponseCookie.from(name, value)
             .httpOnly(true)
             .secure(true)
             .sameSite("Strict")
@@ -67,110 +67,106 @@ public class UserService {
             .path(path)
             .build();
     }
-    
-    public byte[] hashPassword(SecurePassword password){
-        try(password){
-            byte[] hash=Password.hash(password.getValue())
-            .addPepper(pepper)
-            .addRandomSalt()
-            .withArgon2()
-            .getResultAsBytes();
+
+    public byte[] hashPassword(SecurePassword password) {
+        try (password) {
+            byte[] hash = Password.hash(password.getValue())
+                .addPepper(pepper)
+                .addRandomSalt()
+                .withArgon2()
+                .getResultAsBytes();
             return hash;
         }
     }
-    
-    private CookieTokenPair createTokenCookies(User user){
-        String accessToken=pasetoService.createAccessTokenForUser(user);
-        String refreshToken=pasetoService.createRefreshTokenForUser(user);
+
+    private CookieTokenPair createTokenCookies(User user) {
+        String accessToken = pasetoService.createAccessTokenForUser(user);
+        String refreshToken = pasetoService.createRefreshTokenForUser(user);
         return new CookieTokenPair(
             createTokenCookie(ACCESS_TOKEN_COOKIE_NAME,
                 accessToken,
                 "/",
-                PasetoService.ACCESS_TOKEN_VALID_PERIOD
-            ),
+                PasetoService.ACCESS_TOKEN_VALID_PERIOD),
             createTokenCookie(REFRESH_TOKEN_COOKIE_NAME,
                 refreshToken,
                 "/v1/auth/refresh",
-                PasetoService.REFRESH_TOKEN_VALID_PERIOD
-            )
-        );
+                PasetoService.REFRESH_TOKEN_VALID_PERIOD));
     }
-    
+
     /**
-     * Verifies user credentials then creates tokens for him. Calculates hash 
+     * Verifies user credentials then creates tokens for him. Calculates hash
      * even if user not found in database.
-     * 
+     *
      * @param credentials User login data.
-     * 
+     *
      * @return Refresh and access tokens.
      */
-    public Mono<LoginResult> login(UserAuthenticationDTO credentials){
+    public Mono<LoginResult> login(UserAuthenticationDTO credentials) {
         return repo.findByEmail(credentials.email())
-            .switchIfEmpty(Mono.error(new EntityNotFoundException("User","")))
+            .switchIfEmpty(Mono.error(new EntityNotFoundException("User", "")))
             // Prevent timing attacks if no user with thiat email.
-            .onErrorResume((t)->{
+            .onErrorResume((t) -> {
                 log.debug("User not found");
-                byte[] randomBytes=ByteUtil.randomBytes(HASH_BYTES);
-                Password.check(credentials.password().getValue(),randomBytes)
+                byte[] randomBytes = ByteUtil.randomBytes(HASH_BYTES);
+                Password.check(credentials.password().getValue(), randomBytes)
                     .withArgon2();
                 throw new AuthenticationException("Invalid credentials");
             })
             // Success
-            .map((user)->{
-                boolean valid=Password.check(credentials.password().getValue(),user.getHash())
+            .map((user) -> {
+                boolean valid = Password.check(credentials.password().getValue(), user.getHash())
                     .addPepper(pepper)
                     .withArgon2();
-                if(!valid)
+                if (!valid)
                     throw new AuthenticationException("Invalid credentials");
-                log.info("User {} logged in",user.getId().toString());
-                return new LoginResult(createTokenCookies(user),new AuthenticationResultDTO(
-                    user.getId().toString(),user.getEmail(),user.getRole()));
+                log.info("User {} logged in", user.getId().toString());
+                return new LoginResult(createTokenCookies(user), new AuthenticationResultDTO(
+                    user.getId().toString(), user.getEmail(), user.getRole()));
             })
             // Transform all exceptions to UNAUTHORIZED
-            .onErrorResume((err)->Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED,err.getMessage())));
+            .onErrorResume((err) -> Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, err.getMessage())));
     }
-    
+
     /**
      * Refresh access token.
-     * 
+     *
      * @param refreshToken Cookie containing refresh token.
-     * 
+     *
      * @return Rotated tokens.
      */
-    public Mono<ResponseCookie> refreshAccessToken(HttpCookie refreshToken){
-        if(refreshToken==null)
+    public Mono<ResponseCookie> refreshAccessToken(HttpCookie refreshToken) {
+        if (refreshToken == null)
             throw new AuthenticationException("Missing refresh token");
-        if(!refreshToken.getName().equals(REFRESH_TOKEN_COOKIE_NAME))
+        if (!refreshToken.getName().equals(REFRESH_TOKEN_COOKIE_NAME))
             throw new AuthenticationException("Not a refresh token");
         return pasetoService.validateToken(refreshToken.getValue())
-            .map((auth)->{
-                ParsedToken token=(ParsedToken)auth.getCredentials();
+            .map((auth) -> {
+                ParsedToken token = (ParsedToken) auth.getCredentials();
                 return UUID.fromString(token.getSubject());
             })
-            .flatMap((userID)->repo.findById(userID))
-            .map((user)->createTokenCookie(REFRESH_TOKEN_COOKIE_NAME,
+            .flatMap((userID) -> repo.findById(userID))
+            .map((user) -> createTokenCookie(REFRESH_TOKEN_COOKIE_NAME,
                 pasetoService.createAccessTokenForUser(user),
                 "/v1/auth/refresh",
-                PasetoService.REFRESH_TOKEN_VALID_PERIOD
-            ));
+                PasetoService.REFRESH_TOKEN_VALID_PERIOD));
     }
-    
+
     @PreAuthorize("hasRole('ADMIN')")
-    public Mono<User> createUser(UserCreationDTO newUserData){
-        byte[] hash=hashPassword(newUserData.getPassword());
-        UserRole role=UserRole.fromInt(newUserData.getRole());
-        User user=new User(newUserData.getEmail(),hash,role,
+    public Mono<User> createUser(UserCreationDTO newUserData) {
+        byte[] hash = hashPassword(newUserData.getPassword());
+        UserRole role = UserRole.fromInt(newUserData.getRole());
+        User user = new User(newUserData.getEmail(), hash, role,
             newUserData.getExpireDate(),
-            newUserData.isEnabled(),newUserData.isLocked(),
+            newUserData.isEnabled(), newUserData.isLocked(),
             newUserData.isForcedPasswordChange());
         return repo.save(user);
     }
-    
-    public Mono<User> getUser(UUID userID){
+
+    public Mono<User> getUser(UUID userID) {
         return repo.findById(userID);
     }
-    
-    public Mono<User> getUser(String email){
+
+    public Mono<User> getUser(String email) {
         return repo.findByEmail(email);
     }
 }

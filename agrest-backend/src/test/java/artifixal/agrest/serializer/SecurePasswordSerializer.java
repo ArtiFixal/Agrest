@@ -9,12 +9,11 @@ import tools.jackson.databind.ValueSerializer;
 /**
  * Serializes {@code SecurePassword} to JSON.
  */
-public class SecurePasswordSerializer extends ValueSerializer<SecurePassword>{
+public class SecurePasswordSerializer extends ValueSerializer<SecurePassword> {
 
     @Override
-    public void serialize(SecurePassword value,JsonGenerator gen,SerializationContext ctxt) throws JacksonException{
-        if(value==null||value.getValue()==null)
-        {
+    public void serialize(SecurePassword value, JsonGenerator gen, SerializationContext ctxt) throws JacksonException {
+        if (value == null || value.getValue() == null) {
             gen.writeNull();
             return;
         }

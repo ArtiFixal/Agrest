@@ -18,40 +18,41 @@ import reactor.core.publisher.Mono;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    
-    protected Mono<ResponseEntity<ErrorDTO>> handleAsUnauthorized(ErrorDTO dto){
+
+    protected Mono<ResponseEntity<ErrorDTO>> handleAsUnauthorized(ErrorDTO dto) {
         return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body(dto));
     }
-    
+
     @ExceptionHandler(AuthenticationException.class)
-    public Mono<ResponseEntity<ErrorDTO>> handleAuthorizationException(AuthenticationException ex, ServerWebExchange exchange){
+    public Mono<ResponseEntity<ErrorDTO>> handleAuthorizationException(AuthenticationException ex,
+        ServerWebExchange exchange) {
         ErrorDTO dto = new ErrorDTO(ex.getMessage());
         return handleAsUnauthorized(dto);
     }
-    
+
     @ExceptionHandler(PasetoException.class)
-    public Mono<ResponseEntity<ErrorDTO>> handlePasetoException(PasetoException ex, ServerWebExchange exchange){
+    public Mono<ResponseEntity<ErrorDTO>> handlePasetoException(PasetoException ex, ServerWebExchange exchange) {
         ErrorDTO dto = new ErrorDTO(ex.getMessage());
         return handleAsUnauthorized(dto);
     }
-    
+
     @ExceptionHandler(EntityNotFoundException.class)
-    public Mono<ResponseEntity<ErrorDTO>> handleEntityNotFound(EntityNotFoundException ex, ServerWebExchange exchange){
-        ErrorDTO dto=new ErrorDTO(ex.getMessage());
+    public Mono<ResponseEntity<ErrorDTO>> handleEntityNotFound(EntityNotFoundException ex, ServerWebExchange exchange) {
+        ErrorDTO dto = new ErrorDTO(ex.getMessage());
         return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(dto));
     }
-    
+
     @ExceptionHandler(SecretNotFoundException.class)
-    public Mono<ResponseEntity<ErrorDTO>> handleSecretNotFound(SecretNotFoundException ex, ServerWebExchange exchange){
-        ErrorDTO dto=new ErrorDTO("Server is missing some essential data");
+    public Mono<ResponseEntity<ErrorDTO>> handleSecretNotFound(SecretNotFoundException ex, ServerWebExchange exchange) {
+        ErrorDTO dto = new ErrorDTO("Server is missing some essential data");
         return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(dto));
     }
-    
-    public Mono<ResponseEntity<ErrorDTO>> handleCsrfTokenException(CsrfTokenException ex, ServerWebExchange exchange){
-        ErrorDTO dto=new ErrorDTO(ex.getMessage());
+
+    public Mono<ResponseEntity<ErrorDTO>> handleCsrfTokenException(CsrfTokenException ex, ServerWebExchange exchange) {
+        ErrorDTO dto = new ErrorDTO(ex.getMessage());
         return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN)
             .body(dto));
     }

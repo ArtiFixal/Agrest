@@ -10,10 +10,10 @@ public class EntityNotFoundException extends RuntimeException {
 
     private final String entityName;
     private final Object entityID;
-    
-    public EntityNotFoundException(String entityName,Object entityID){
-        super(entityName+" with ID "+entityID+" not found");
-        this.entityID=entityID;
-        this.entityName=entityName;
+
+    public EntityNotFoundException(String entityName, Object entityID) {
+        super(entityName + " with ID " + entityID + " not found");
+        this.entityID = entityID;
+        this.entityName = entityName;
     }
 }

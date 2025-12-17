@@ -15,35 +15,35 @@ public class CertStoresData {
 
     @Value("${secret.keystore.path}")
     private String keyStorePassPath;
-    
+
     @Value("${secret.truststore.path}")
     private String trustStorePassPath;
-    
+
     private String keyStorePassword;
     private String trustStorePassword;
-    
+
     @PostConstruct
-    public void init(){
-        keyStorePassword=readPassword(keyStorePassPath);
-        trustStorePassword=readPassword(trustStorePassPath);
+    public void init() {
+        keyStorePassword = readPassword(keyStorePassPath);
+        trustStorePassword = readPassword(trustStorePassPath);
     }
-    
-    private String readPassword(String filePath){
-        final File passwordFile=new File(filePath);
-        try(Scanner in=new Scanner(passwordFile)){
+
+    private String readPassword(String filePath) {
+        final File passwordFile = new File(filePath);
+        try (Scanner in = new Scanner(passwordFile)) {
             return in.nextLine();
-        }catch(FileNotFoundException ex){
-            throw new RuntimeException("File with SSL secret not found: "+filePath);
-        }finally{
+        } catch (FileNotFoundException ex) {
+            throw new RuntimeException("File with SSL secret not found: " + filePath);
+        } finally {
             passwordFile.delete();
         }
     }
 
-    public String getKeyStorePassword(){
+    public String getKeyStorePassword() {
         return keyStorePassword;
     }
 
-    public String getTrustStorePassword(){
+    public String getTrustStorePassword() {
         return trustStorePassword;
     }
 }

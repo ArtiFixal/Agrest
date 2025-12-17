@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  * R2DBC repository related to users.
  */
 @Repository
-public interface UserRepository extends R2dbcRepository<User,UUID>{
-    
+public interface UserRepository extends R2dbcRepository<User, UUID> {
+
     Mono<User> findByEmail(String email);
 }

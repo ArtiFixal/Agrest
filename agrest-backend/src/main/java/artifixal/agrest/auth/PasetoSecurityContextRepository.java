@@ -16,27 +16,27 @@ import reactor.core.publisher.Mono;
  */
 @Component
 @AllArgsConstructor
-public class PasetoSecurityContextRepository implements ServerSecurityContextRepository{
-    
+public class PasetoSecurityContextRepository implements ServerSecurityContextRepository {
+
     private final PasetoAuthenticationManager authManager;
 
     @Override
-    public Mono<Void> save(ServerWebExchange exchange,SecurityContext context){
+    public Mono<Void> save(ServerWebExchange exchange, SecurityContext context) {
         return Mono.empty();
     }
 
     @Override
-    public Mono<SecurityContext> load(ServerWebExchange exchange){
-        final HttpCookie accessTokenCookie=exchange.getRequest()
+    public Mono<SecurityContext> load(ServerWebExchange exchange) {
+        final HttpCookie accessTokenCookie = exchange.getRequest()
             .getCookies()
             .getFirst(UserService.ACCESS_TOKEN_COOKIE_NAME);
-        if(accessTokenCookie==null)
+        if (accessTokenCookie == null)
             return Mono.empty();
         return Mono.just(accessTokenCookie)
-            .flatMap((token)->{
-                var authToken=new UsernamePasswordAuthenticationToken(token,token);
+            .flatMap((token) -> {
+                var authToken = new UsernamePasswordAuthenticationToken(token, token);
                 return authManager.authenticate(authToken)
-                    .map((auth)->(SecurityContext)new SecurityContextImpl(auth));
+                    .map((auth) -> (SecurityContext) new SecurityContextImpl(auth));
             });
     }
 }

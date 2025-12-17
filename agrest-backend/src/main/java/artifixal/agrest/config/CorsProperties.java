@@ -15,5 +15,5 @@ import org.springframework.stereotype.Component;
 @Setter
 public class CorsProperties {
     private List<String> allowedOrigins;
-    
+
 }

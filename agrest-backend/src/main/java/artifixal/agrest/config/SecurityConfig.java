@@ -26,38 +26,38 @@ import org.springframework.security.web.server.authorization.HttpStatusServerAcc
 @EnableReactiveMethodSecurity
 @AllArgsConstructor
 public class SecurityConfig {
-    
+
     private final PasetoAuthenticationManager authManager;
     private final PasetoSecurityContextRepository contextRepo;
-    
+
     @Bean
-    public SecurityWebFilterChain webFilterChain(ServerHttpSecurity http){
+    public SecurityWebFilterChain webFilterChain(ServerHttpSecurity http) {
         return http
             .redirectToHttps(Customizer.withDefaults())
             .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
             .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
-            .cors((cors)->{})
+            .cors((cors) -> {})
             .logout(ServerHttpSecurity.LogoutSpec::disable)
             .authenticationManager(authManager)
             .securityContextRepository(contextRepo)
-            .exceptionHandling((ex)->{
+            .exceptionHandling((ex) -> {
                 ex.authenticationEntryPoint(new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED));
                 ex.accessDeniedHandler(new HttpStatusServerAccessDeniedHandler(HttpStatus.FORBIDDEN));
             })
-            .authorizeExchange((exchange)->{
+            .authorizeExchange((exchange) -> {
                 exchange.pathMatchers(HttpMethod.OPTIONS)
                     .permitAll()
-                    .pathMatchers(HttpMethod.POST,"/v1/auth/login","/v1/auth/refresh")
+                    .pathMatchers(HttpMethod.POST, "/v1/auth/login", "/v1/auth/refresh")
                     .permitAll()
                     .anyExchange()
                     .authenticated();
             })
             .build();
     }
-    
+
     @PostConstruct
-    public void init(){
+    public void init() {
         if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
             Security.addProvider(new BouncyCastleProvider());
         }

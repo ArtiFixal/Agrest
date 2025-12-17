@@ -21,25 +21,26 @@ import reactor.core.publisher.Mono;
 @RestController
 @AllArgsConstructor
 public class AuthController {
-    
+
     private final UserService userService;
 
     @PostMapping("/login")
-    public Mono<AuthenticationResultDTO> login(@RequestBody UserAuthenticationDTO credentials, ServerHttpResponse response){
+    public Mono<AuthenticationResultDTO> login(@RequestBody UserAuthenticationDTO credentials,
+        ServerHttpResponse response) {
         return userService.login(credentials)
-            .map((login)->{
+            .map((login) -> {
                 response.addCookie(login.cookies().accessTokenCookie());
                 response.addCookie(login.cookies().refreshTokenCookie());
                 return login.userData();
             });
     }
-    
+
     @PostMapping("/refresh")
-    public Mono<Void> refresh(ServerRequest request, ServerHttpResponse response){
-        HttpCookie refreshToken=request.cookies()
+    public Mono<Void> refresh(ServerRequest request, ServerHttpResponse response) {
+        HttpCookie refreshToken = request.cookies()
             .getFirst(UserService.REFRESH_TOKEN_COOKIE_NAME);
         return userService.refreshAccessToken(refreshToken)
-            .flatMap((token)->{
+            .flatMap((token) -> {
                 response.addCookie(token);
                 return Mono.empty();
             });

@@ -9,9 +9,9 @@ import reactor.core.publisher.Mono;
  */
 @RestController
 public class AuthenticatedUserTestController {
-    
+
     @GetMapping("/auth/accessTest")
-    public Mono<String> onlyForAuthorized(){
+    public Mono<String> onlyForAuthorized() {
         return Mono.just("ok");
     }
 }

@@ -11,12 +11,12 @@ import reactor.core.publisher.Mono;
  * Callback generating UUID for the new {@code User} entities.
  */
 @Component
-public class UserUUIDGenerationCallback implements BeforeConvertCallback<User>{
+public class UserUUIDGenerationCallback implements BeforeConvertCallback<User> {
 
     @Override
-    public Publisher<User> onBeforeConvert(User entity,SqlIdentifier name){
-        if(entity.getId()==null)
-                entity.setId(UUID.randomUUID());
+    public Publisher<User> onBeforeConvert(User entity, SqlIdentifier name) {
+        if (entity.getId() == null)
+            entity.setId(UUID.randomUUID());
         return Mono.just(entity);
     }
 }

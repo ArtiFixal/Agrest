@@ -21,34 +21,34 @@ import reactor.netty.http.server.HttpServer;
  */
 @Configuration
 @RequiredArgsConstructor
-public class SslConfig implements WebServerFactoryCustomizer<NettyReactiveWebServerFactory>{
+public class SslConfig implements WebServerFactoryCustomizer<NettyReactiveWebServerFactory> {
 
     @Value("${server.ssl.key-store}")
     private String keyStorePath;
-    
+
     @Value("${server.ssl.trust-store}")
     private String trustStorePath;
-    
+
     @Value("${server.ssl.key-alias}")
     private String sslKeyAlias;
-    
+
     /**
      * Server telling http client to upgrade to the https.
      */
     private DisposableServer httpServer;
-    
+
     @Value("${server.http.port}")
     private int httpPort;
-    
+
     private final CertStoresData certStoresData;
-    
+
     @SneakyThrows
     @Override
-    public void customize(NettyReactiveWebServerFactory factory){
-        Ssl ssl=new Ssl();
+    public void customize(NettyReactiveWebServerFactory factory) {
+        Ssl ssl = new Ssl();
         ssl.setEnabled(true);
         ssl.setProtocol("TLSv1.3");
-        ssl.setEnabledProtocols(new String[]{"TLSv1.3","TLSv1.2"});
+        ssl.setEnabledProtocols(new String[]{"TLSv1.3", "TLSv1.2"});
         ssl.setKeyStore(keyStorePath);
         ssl.setKeyStoreType("PKCS12");
         ssl.setKeyAlias(sslKeyAlias);
@@ -59,24 +59,26 @@ public class SslConfig implements WebServerFactoryCustomizer<NettyReactiveWebSer
         ssl.setClientAuth(Ssl.ClientAuth.NONE);
         factory.setSsl(ssl);
     }
-    
+
     @PostConstruct
-    public void startRedirectServer(){
-        httpServer=HttpServer.create()
+    public void startRedirectServer() {
+        httpServer = HttpServer.create()
             .port(httpPort)
-            .route((routes)->routes.route((request)->true,(request,response)->{
-                // Tell client that he attempted to use HTTP
-                return response.status(HttpResponseStatus.UPGRADE_REQUIRED)
-                    .header(HttpHeaderNames.UPGRADE,"TLS/1.2, HTTP/1.1")
-                    .header(HttpHeaderNames.CONNECTION,"Upgrade")
-                    .header(HttpHeaderNames.CONTENT_TYPE,MediaType.TEXT_PLAIN_VALUE)
-                    .sendString(Mono.just("Upgrade required: You are attempting to use HTTP. Use HTTPS instead."));
-            })).bindNow();
+            .route((routes) -> routes.route((request) -> true,
+                (request, response) -> {
+                    // Tell client that he attempted to use HTTP
+                    return response.status(HttpResponseStatus.UPGRADE_REQUIRED)
+                        .header(HttpHeaderNames.UPGRADE, "TLS/1.2, HTTP/1.1")
+                        .header(HttpHeaderNames.CONNECTION, "Upgrade")
+                        .header(HttpHeaderNames.CONTENT_TYPE, MediaType.TEXT_PLAIN_VALUE)
+                        .sendString(Mono.just("Upgrade required: You are attempting to use HTTP. Use HTTPS instead."));
+                }))
+            .bindNow();
     }
-    
+
     @PreDestroy
-    public void stopRedirectServer(){
-        if(httpServer!=null)
+    public void stopRedirectServer() {
+        if (httpServer != null)
             httpServer.disposeNow();
     }
 }

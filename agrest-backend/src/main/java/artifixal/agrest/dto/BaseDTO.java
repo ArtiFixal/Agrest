@@ -6,7 +6,7 @@ import lombok.experimental.SuperBuilder;
 
 /**
  * Base class for DTOs.
- * 
+ *
  * @param <T> ID type.
  */
 @Getter

@@ -14,48 +14,48 @@ import org.springframework.security.test.context.support.WithMockUser;
 /**
  * Tests user authentication at /v1/auth
  */
-public class AuthControllerIntegrationTest extends IntegrationTest{
-    
+public class AuthControllerIntegrationTest extends IntegrationTest {
+
     @Autowired
     private UserService userService;
-    
+
     @Test
-    @WithMockUser(roles={"ADMIN"})
-    public void successfulLogin(){
+    @WithMockUser(roles = {"ADMIN"})
+    public void successfulLogin() {
         // Create user
-        final String email="testuser@test.localhost";
-        final String password="!123drowssaP";
-        
-        createUser(email,password);
-        
+        final String email = "testuser@test.localhost";
+        final String password = "!123drowssaP";
+
+        createUser(email, password);
+
         // Login attempt
-        login(email,password);
+        login(email, password);
         // Access authorized resource attempt
-        get("/auth/accessTest",HttpStatus.OK)
+        get("/auth/accessTest", HttpStatus.OK)
             .test();
     }
-    
+
     @Test
-    @WithMockUser(roles={"ADMIN"})
-    public void shouldNotLoginWrongCredentials(){
-        final String email="wrongpassworrd@test.localhost";
-        createUser(email,"Password");
-        
-        var credentials=new UserAuthenticationDTO(email,new SecurePassword("1234567890".getBytes()));
-        post("/v1/auth/login",HttpStatus.UNAUTHORIZED)
+    @WithMockUser(roles = {"ADMIN"})
+    public void shouldNotLoginWrongCredentials() {
+        final String email = "wrongpassworrd@test.localhost";
+        createUser(email, "Password");
+
+        var credentials = new UserAuthenticationDTO(email, new SecurePassword("1234567890".getBytes()));
+        post("/v1/auth/login", HttpStatus.UNAUTHORIZED)
             .test(credentials);
     }
-    
+
     @Test
-    public void shouldNotLoginNonExistentUser(){
-        final String email="nouser@test.localhost";
-        
-        var credentials=new UserAuthenticationDTO(email,new SecurePassword("nouserpassword".getBytes()));
-        post("/v1/auth/login",HttpStatus.UNAUTHORIZED)
+    public void shouldNotLoginNonExistentUser() {
+        final String email = "nouser@test.localhost";
+
+        var credentials = new UserAuthenticationDTO(email, new SecurePassword("nouserpassword".getBytes()));
+        post("/v1/auth/login", HttpStatus.UNAUTHORIZED)
             .test(credentials);
     }
-    
-    private void createUser(String email,String password){
+
+    private void createUser(String email, String password) {
         var user = UserCreationDTO.builder()
             .email(email)
             .password(new SecurePassword(password.getBytes()))
@@ -65,7 +65,7 @@ public class AuthControllerIntegrationTest extends IntegrationTest{
             .locked(false)
             .forcedPasswordChange(false)
             .build();
-        
+
         userService.createUser(user)
             .block();
     }

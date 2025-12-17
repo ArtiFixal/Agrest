@@ -15,19 +15,19 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
  */
 @Configuration
 public class CorsConfig {
-    
+
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
-    public CorsWebFilter corsWebFilter(CorsProperties corsProperties){
-        CorsConfiguration cors=new CorsConfiguration();
+    public CorsWebFilter corsWebFilter(CorsProperties corsProperties) {
+        CorsConfiguration cors = new CorsConfiguration();
         cors.setAllowedOrigins(corsProperties.getAllowedOrigins());
-        cors.setAllowedMethods(Arrays.asList("GET","POST","PUT","PATCH","DELETE"));
-        cors.setAllowedHeaders(Arrays.asList(HttpHeaders.CONTENT_TYPE,"X-XSRF-TOKEN"));
+        cors.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE"));
+        cors.setAllowedHeaders(Arrays.asList(HttpHeaders.CONTENT_TYPE, "X-XSRF-TOKEN"));
         cors.setExposedHeaders(Arrays.asList("X-XSRF-TOKEN"));
         cors.setAllowCredentials(Boolean.TRUE);
-        
-        UrlBasedCorsConfigurationSource source=new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**",cors);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", cors);
         return new CorsWebFilter(source);
     }
 }
