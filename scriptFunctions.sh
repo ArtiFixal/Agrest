@@ -422,6 +422,10 @@ createStores(){
   echo "TrustStore: $PASS_TRUST_STORE" >> "$SHM_SECRETS/.env"
   echo "$PASS_TRUST_STORE" > "$SHM_SECRETS/truststore"
 
+  if [ -f agrest-backend/.enc.env ]; then
+    rm agrest-backend/.enc.env
+  fi
+
   gpg --batch --encrypt --recipient "$HOSTNAME@localhost" --output agrest-backend/.enc.env "$SHM_SECRETS/.env"
   rm "$SHM_SECRETS/.env"
   umask 0022
