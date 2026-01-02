@@ -37,5 +37,10 @@ createFrontendCertRole
 issueFrontendCert
 setupUserPass
 
+# Setup pre-commit hook
+cp .githooks/pre-commit .git/hooks/
+chmod a+x .git/hooks/pre-commit
+echo "[Info]: Pre-commit hook setup completed" 
+
 # Revoke root token
 vault token revoke -self

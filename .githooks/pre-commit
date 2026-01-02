@@ -1,0 +1,60 @@
+#!/bin/bash
+
+RED='\033[0;31m'
+NC='\033[0m'
+
+echo "Running pre-commit hook..."
+
+# Checking java backend files
+JAVA_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep "^agrest-backend/.*\.java$")
+if [ $? -eq 0 ] && [ -n "$JAVA_FILES" ]; then
+    echo "Checking java files..."
+    cd agrest-backend
+
+    JAVA_CHECK=$(echo "$JAVA_FILES" | sed 's|^agrest-backend/||' | paste -sd, -)
+    
+    ./mvnw spotless:check -DspotlessFiles="$JAVA_CHECK" > /dev/null
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Backend files are unformatted!${NC}"
+        echo "Formatting..."
+        ./mvnw spotless:apply -DspotlessFiles="$JAVA_CHECK" > /dev/null
+        cd ..
+
+        echo "$JAVA_FILES" | while IFS= read -r file; do
+            if [ -n "$file" ]; then
+                git add "$file"
+            fi
+        done
+    else
+        cd ..
+    fi
+fi
+
+# Checking vue frontend files
+VUE_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep "^agrest-frontend/.*\.\(ts\|vue\|js\|json\|html\|css\)$")
+if [ $? -eq 0 ] && [ -n "$VUE_FILES" ]; then
+    echo "Checking vue files..."
+    cd agrest-frontend
+
+    VUE_CHECK=$(echo "$VUE_FILES" | sed 's|^agrest-frontend/||')
+
+    echo "$VUE_CHECK" | xargs npx prettier --check > /dev/null
+    npx prettier --check $(echo "$VUE_FILES" | sed 's|^agrest-frontend/||') > /dev/null
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Frontend files are unformatted!${NC}"
+        echo "Formatting..."
+        echo "$VUE_CHECK" | xargs npx prettier --write > /dev/null
+        cd ..
+
+        echo "$VUE_FILES" | while IFS= read -r file; do
+            if [ -n "$file" ]; then
+                git add "$file"
+            fi
+        done
+    else
+        cd ..
+    fi
+fi
+
+echo "Pre-commit hook completed"
+exit 0

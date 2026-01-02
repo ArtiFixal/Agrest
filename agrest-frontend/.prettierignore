@@ -1,0 +1,12 @@
+# shadcn components
+src/components/ui
+
+# lib
+src/lib/utils.ts
+
+node_modules
+build
+dist
+coverage
+
+README.MD
