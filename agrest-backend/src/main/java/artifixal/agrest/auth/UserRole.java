@@ -21,9 +21,9 @@ public enum UserRole {
     @Override
     public String toString() {
         return switch (this) {
-            case ANALYST -> "ANALYST";
-            case USER -> "USER";
-            case ADMIN -> "ADMIN";
+            case ANALYST -> "ROLE_ANALYST";
+            case USER -> "ROLE_USER";
+            case ADMIN -> "ROLE_ADMIN";
             default ->
                 throw new IllegalArgumentException("Unknown UserRole enum value");
         };
