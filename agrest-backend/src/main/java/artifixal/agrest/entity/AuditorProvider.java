@@ -22,9 +22,7 @@ public class AuditorProvider implements ReactiveAuditorAware<UUID> {
         return ReactiveSecurityContextHolder.getContext()
             .map(SecurityContext::getAuthentication)
             .filter(Authentication::isAuthenticated)
-            .map(auth -> {
-                return (UUID) auth.getPrincipal();
-            })
+            .map(auth -> UUID.fromString(auth.getPrincipal().toString()))
             .switchIfEmpty(Mono.error(() -> new AuthenticationException("Can't audite with unauthenticated user")));
     }
 }
