@@ -32,7 +32,7 @@ public class PasetoSecurityContextRepository implements ServerSecurityContextRep
             .getFirst(UserService.ACCESS_TOKEN_COOKIE_NAME);
         if (accessTokenCookie == null)
             return Mono.empty();
-        return Mono.just(accessTokenCookie)
+        return Mono.just(accessTokenCookie.getValue())
             .flatMap((token) -> {
                 var authToken = new UsernamePasswordAuthenticationToken(token, token);
                 return authManager.authenticate(authToken)
