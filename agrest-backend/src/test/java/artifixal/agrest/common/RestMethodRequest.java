@@ -2,6 +2,8 @@ package artifixal.agrest.common;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,7 +37,7 @@ public abstract class RestMethodRequest<T> {
     /**
      * Tests to execute after request.
      */
-    protected ArrayList<Consumer<T>> tests;
+    protected ArrayList<Consumer<ResponseSpec>> tests;
 
     private Supplier<ResponseSpec> testSupplier;
 
@@ -43,12 +45,15 @@ public abstract class RestMethodRequest<T> {
 
     private final HttpHeaders headers;
 
+    private final HashMap<String, String> cookies;
+
     public RestMethodRequest(String url, HttpStatus expectedStatus, Class responseType) {
         this.tested = false;
         this.url = url;
         this.expectedStatus = expectedStatus;
         this.tests = new ArrayList<>();
         headers = new HttpHeaders();
+        cookies = new HashMap<>();
         this.testSupplier = defaultTest();
         this.responseType = responseType;
     }
@@ -60,10 +65,12 @@ public abstract class RestMethodRequest<T> {
      * @param request What to send.
      * @param responseType Type of response.
      * @param headers Request headers.
+     * @param cookies Cookies atached to request.
      *
      * @return Received response.
      */
-    protected abstract ResponseSpec sendRequest(String url, Object request, Class<T> responseType, HttpHeaders headers);
+    protected abstract ResponseSpec sendRequest(String url, Object request, Class<T> responseType, HttpHeaders headers,
+        Map<String, String> cookies);
 
     /**
      * Tests if row count changed in DB repository on the request.
@@ -78,7 +85,7 @@ public abstract class RestMethodRequest<T> {
         return this;
     }
 
-    public RestMethodRequest addTest(Consumer<T>... additionalTests) {
+    public RestMethodRequest addTest(Consumer<ResponseSpec>... additionalTests) {
         tests.addAll(Arrays.asList(additionalTests));
         return this;
     }
@@ -87,7 +94,7 @@ public abstract class RestMethodRequest<T> {
      * Tests if response has body.
      */
     public RestMethodRequest responseBodyNotNull() {
-        tests.add((response) -> assertNotNull(response));
+        tests.add((response) -> assertNotNull(response.expectBody().isEmpty()));
         return this;
     }
 
@@ -97,12 +104,27 @@ public abstract class RestMethodRequest<T> {
      * @param instance Instance to test for.
      */
     public RestMethodRequest instanceOf(Class instance) {
-        tests.add((response) -> assertTrue(response.getClass().isInstance(instance)));
+        tests.add((response) -> assertTrue(response.expectBody(responseType)
+            .returnResult()
+            .getResponseBody()
+            .getClass()
+            .isInstance(instance)));
+        return this;
+    }
+
+    /**
+     * Adds new cookie or replaces existing one.
+     *
+     * @param name Cookie name
+     * @param value Cookie value
+     */
+    public RestMethodRequest addCookie(String name, String value) {
+        cookies.put(name, value);
         return this;
     }
 
     public RestMethodRequest headers(HttpHeaders headers) {
-        headers.addAll(headers);
+        this.headers.addAll(headers);
         return this;
     }
 
@@ -143,7 +165,7 @@ public abstract class RestMethodRequest<T> {
 
     private Supplier<ResponseSpec> defaultTest() {
         return () -> {
-            ResponseSpec response = sendRequest(url, request, responseType, headers);
+            ResponseSpec response = sendRequest(url, request, responseType, headers, cookies);
             return response.expectStatus()
                 .isEqualTo(expectedStatus.value());
         };

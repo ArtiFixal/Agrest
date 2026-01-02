@@ -1,10 +1,15 @@
 package artifixal.agrest.common;
 
+import artifixal.agrest.auth.AuthenticationResultDTO;
+import artifixal.agrest.auth.CookieTokenPair;
+import artifixal.agrest.auth.LoginResult;
 import artifixal.agrest.dto.user.SecurePassword;
 import artifixal.agrest.dto.user.UserAuthenticationDTO;
 import artifixal.agrest.serializer.SecurePasswordSerializer;
+import artifixal.agrest.services.UserService;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import java.util.Map;
 import javax.net.ssl.SSLException;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,11 +97,16 @@ public abstract class IntegrationTest {
         return new RestMethodRequest(mappingPath, expectedStatus, responseType) {
             @Override
             protected ResponseSpec sendRequest(String mappingPath, Object request, Class responseType,
-                HttpHeaders headers) {
+                HttpHeaders headers, Map cookies) {
                 return http.get()
                     .uri(mappingPath)
-                    .headers((t) -> {
-                        t.addAll(headers);
+                    .headers((requestHeaders) -> {
+                        requestHeaders.addAll(headers);
+                    })
+                    .cookies((requestCookies) -> {
+                        cookies.forEach((key, value) -> {
+                            requestCookies.add((String) key, (String) value);
+                        });
                     })
                     .exchange();
             }
@@ -127,11 +137,17 @@ public abstract class IntegrationTest {
     protected RestMethodRequest post(String mappingPath, HttpStatus expectedStatus, Class responseType) {
         return new RestMethodRequest(mappingPath, expectedStatus, responseType) {
             @Override
-            protected ResponseSpec sendRequest(String url, Object request, Class responseType, HttpHeaders headers) {
+            protected ResponseSpec sendRequest(String url, Object request, Class responseType, HttpHeaders headers,
+                Map cookies) {
                 return http.post()
                     .uri(mappingPath)
-                    .headers((t) -> {
-                        t.addAll(headers);
+                    .headers((requestHeaders) -> {
+                        requestHeaders.addAll(headers);
+                    })
+                    .cookies((requestCookies) -> {
+                        cookies.forEach((key, value) -> {
+                            requestCookies.add((String) key, (String) value);
+                        });
                     })
                     .bodyValue(request)
                     .exchange();
@@ -164,11 +180,16 @@ public abstract class IntegrationTest {
         return new RestMethodRequest(mappingPath, expectedStatus, responseType) {
             @Override
             protected ResponseSpec sendRequest(String mappingPath, Object request, Class responseType,
-                HttpHeaders headers) {
+                HttpHeaders headers, Map cookies) {
                 return http.put()
                     .uri(mappingPath)
-                    .headers((t) -> {
-                        t.addAll(headers);
+                    .headers((requestHeaders) -> {
+                        requestHeaders.addAll(headers);
+                    })
+                    .cookies((requestCookies) -> {
+                        cookies.forEach((key, value) -> {
+                            requestCookies.add((String) key, (String) value);
+                        });
                     })
                     .bodyValue(request)
                     .exchange();
@@ -201,11 +222,16 @@ public abstract class IntegrationTest {
         return new RestMethodRequest(mappingPath, expectedStatus, responseType) {
             @Override
             protected ResponseSpec sendRequest(String mappingPath, Object request, Class responseType,
-                HttpHeaders headers) {
+                HttpHeaders headers, Map cookies) {
                 return http.patch()
                     .uri(mappingPath)
-                    .headers((t) -> {
-                        t.addAll(headers);
+                    .headers((requestHeaders) -> {
+                        requestHeaders.addAll(headers);
+                    })
+                    .cookies((requestCookies) -> {
+                        cookies.forEach((key, value) -> {
+                            requestCookies.add((String) key, (String) value);
+                        });
                     })
                     .bodyValue(request)
                     .exchange();
@@ -213,13 +239,24 @@ public abstract class IntegrationTest {
         };
     }
 
-    protected String login(String email, String password) {
+    protected LoginResult login(String email, String password) {
         final UserAuthenticationDTO loginCredentials = new UserAuthenticationDTO(email,
             new SecurePassword(password.getBytes()));
 
-        return (String) post("/v1/auth/login", HttpStatus.OK, String.class)
-            .responseBodyNotNull()
-            .test(loginCredentials);
+        var result = http.post()
+            .uri("/v1/auth/login")
+            .bodyValue(loginCredentials)
+            .exchange()
+            .expectStatus()
+            .is2xxSuccessful()
+            .expectBody(AuthenticationResultDTO.class)
+            .returnResult();
+
+        var accessCookie = result.getResponseCookies()
+            .getFirst(UserService.ACCESS_TOKEN_COOKIE_NAME);
+        var refreshCookie = result.getResponseCookies()
+            .getFirst(UserService.REFRESH_TOKEN_COOKIE_NAME);
+        return new LoginResult(new CookieTokenPair(accessCookie, refreshCookie), result.getResponseBody());
     }
 
     protected HttpCookie getCsrfToken() {
@@ -234,9 +271,5 @@ public abstract class IntegrationTest {
             .returnResult();
         return result.getResponseCookies()
             .getFirst("csrf");
-    }
-
-    protected String loginAs(String userRole) {
-        return "";
     }
 }
