@@ -3,7 +3,6 @@ package artifixal.agrest.exceptions.handler;
 import artifixal.agrest.dto.ErrorDTO;
 import artifixal.agrest.exceptions.CsrfTokenException;
 import artifixal.agrest.exceptions.EntityNotFoundException;
-import org.paseto4j.commons.PasetoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -27,12 +26,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthenticationException.class)
     public Mono<ResponseEntity<ErrorDTO>> handleAuthorizationException(AuthenticationException ex,
         ServerWebExchange exchange) {
-        ErrorDTO dto = new ErrorDTO(ex.getMessage());
-        return handleAsUnauthorized(dto);
-    }
-
-    @ExceptionHandler(PasetoException.class)
-    public Mono<ResponseEntity<ErrorDTO>> handlePasetoException(PasetoException ex, ServerWebExchange exchange) {
         ErrorDTO dto = new ErrorDTO(ex.getMessage());
         return handleAsUnauthorized(dto);
     }
