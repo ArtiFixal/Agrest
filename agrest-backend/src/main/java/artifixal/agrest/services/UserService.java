@@ -26,6 +26,7 @@ import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
@@ -168,5 +169,10 @@ public class UserService {
 
     public Mono<User> getUser(String email) {
         return repo.findByEmail(email);
+    }
+
+    public static Mono<String> getCurrentUserID() {
+        return ReactiveSecurityContextHolder.getContext()
+            .map((ctx) -> ctx.getAuthentication().getPrincipal().toString());
     }
 }
