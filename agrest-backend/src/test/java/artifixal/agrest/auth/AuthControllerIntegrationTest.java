@@ -5,11 +5,16 @@ import artifixal.agrest.services.UserService;
 import artifixal.agrest.common.IntegrationTest;
 import artifixal.agrest.dto.user.SecurePassword;
 import artifixal.agrest.dto.user.UserCreationDTO;
+import artifixal.agrest.entity.User;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.UUID;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 
 /**
  * Tests user authentication at /v1/auth
@@ -20,7 +25,6 @@ public class AuthControllerIntegrationTest extends IntegrationTest {
     private UserService userService;
 
     @Test
-    @WithMockUser(roles = {"ADMIN"})
     public void successfulLogin() {
         // Create user
         final String email = "testuser@test.localhost";
@@ -29,14 +33,16 @@ public class AuthControllerIntegrationTest extends IntegrationTest {
         createUser(email, password);
 
         // Login attempt
-        login(email, password);
+        var response = login(email, password);
+        assertEquals(email, response.userData().email());
+
         // Access authorized resource attempt
         get("/auth/accessTest", HttpStatus.OK)
+            .addCookie(UserService.ACCESS_TOKEN_COOKIE_NAME, response.cookies().accessTokenCookie().getValue())
             .test();
     }
 
     @Test
-    @WithMockUser(roles = {"ADMIN"})
     public void shouldNotLoginWrongCredentials() {
         final String email = "wrongpassworrd@test.localhost";
         createUser(email, "Password");
@@ -55,7 +61,7 @@ public class AuthControllerIntegrationTest extends IntegrationTest {
             .test(credentials);
     }
 
-    private void createUser(String email, String password) {
+    private User createUser(String email, String password) {
         var user = UserCreationDTO.builder()
             .email(email)
             .password(new SecurePassword(password.getBytes()))
@@ -66,7 +72,13 @@ public class AuthControllerIntegrationTest extends IntegrationTest {
             .forcedPasswordChange(false)
             .build();
 
-        userService.createUser(user)
+        // Write user as system
+        UUID systemUserID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+        UsernamePasswordAuthenticationToken systemUser = UsernamePasswordAuthenticationToken
+            .authenticated(systemUserID, null, Collections.singleton(UserRole.ADMIN.toAuthority()));
+
+        return userService.createUser(user)
+            .contextWrite(ReactiveSecurityContextHolder.withAuthentication(systemUser))
             .block();
     }
 }
