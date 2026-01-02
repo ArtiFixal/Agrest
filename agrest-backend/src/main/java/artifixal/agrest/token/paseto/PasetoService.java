@@ -7,19 +7,14 @@ import artifixal.agrest.services.VaultService;
 import artifixal.paseto4jutils.ParsedToken;
 import artifixal.paseto4jutils.PasetoBuilder;
 import artifixal.paseto4jutils.PasetoParser;
-import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.security.spec.EdECPoint;
-import java.security.spec.EdECPublicKeySpec;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
-import java.security.spec.NamedParameterSpec;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.time.LocalDateTime;
 import java.util.Collections;
-import org.apache.commons.lang3.ArrayUtils;
 import org.paseto4j.commons.PasetoException;
 import org.paseto4j.commons.PrivateKey;
 import org.paseto4j.commons.PublicKey;
@@ -101,19 +96,10 @@ public class PasetoService {
             .block()
             .getData();
         var pvSpec = new PKCS8EncodedKeySpec(keys.privateKey().value());
-        var pubSpec = getPublicKey(keys.privateKey().value());
+        var pubSpec = new X509EncodedKeySpec(keys.publicKey().value());
         KeyFactory keyAlg = KeyFactory.getInstance("Ed25519");
         var pvKey = keyAlg.generatePrivate(pvSpec);
         var pubKey = keyAlg.generatePublic(pubSpec);
         return new KeyPair(pubKey, pvKey);
-    }
-
-    private KeySpec getPublicKey(byte[] rawKey) {
-        byte lastByte = rawKey[rawKey.length - 1];
-        boolean xOdd = (lastByte & 0x80) != 0;
-        byte[] yBytes = rawKey.clone();
-        ArrayUtils.reverse(yBytes);
-        BigInteger y = new BigInteger(1, yBytes);
-        return new EdECPublicKeySpec(NamedParameterSpec.ED25519, new EdECPoint(xOdd, y));
     }
 }
