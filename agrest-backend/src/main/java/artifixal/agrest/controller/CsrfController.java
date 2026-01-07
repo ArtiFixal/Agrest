@@ -2,10 +2,9 @@ package artifixal.agrest.controller;
 
 import artifixal.agrest.services.CsrfService;
 import lombok.AllArgsConstructor;
-import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.reactive.function.server.ServerResponse;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 /**
@@ -18,15 +17,12 @@ public class CsrfController {
     private final CsrfService csrfService;
 
     @GetMapping("/v1/csrf")
-    public Mono<ServerResponse> getCsrfToken() {
+    public Mono<Void> getCsrfToken(ServerWebExchange exchange) {
         return csrfService.generateToken()
-            .flatMap((token) -> ServerResponse.ok()
-                .cookie(ResponseCookie.from("csrf", token)
-                    .path("/")
-                    .sameSite("Strict")
-                    .secure(true)
-                    .maxAge(180)
-                    .build())
-                .build());
+            .map((token) -> csrfService.createCsrfCookie(token))
+            .flatMap((csrfCookie) -> {
+                exchange.getResponse().addCookie(csrfCookie);
+                return exchange.getResponse().setComplete();
+            });
     }
 }

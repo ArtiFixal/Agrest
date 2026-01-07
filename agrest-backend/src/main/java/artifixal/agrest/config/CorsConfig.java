@@ -22,7 +22,7 @@ public class CorsConfig {
         CorsConfiguration cors = new CorsConfiguration();
         cors.setAllowedOrigins(corsProperties.getAllowedOrigins());
         cors.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE"));
-        cors.setAllowedHeaders(Arrays.asList(HttpHeaders.CONTENT_TYPE, "X-XSRF-TOKEN"));
+        cors.setAllowedHeaders(Arrays.asList(HttpHeaders.CONTENT_TYPE, "X-XSRF-TOKEN", "X-REQUESTED-WITH"));
         cors.setExposedHeaders(Arrays.asList("X-XSRF-TOKEN"));
         cors.setAllowCredentials(Boolean.TRUE);
 
