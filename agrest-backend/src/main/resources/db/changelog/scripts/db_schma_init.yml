@@ -1,8 +1,9 @@
 databaseChangeLog:
   - changeSet:
-      id: 1
+      id: 1.0.0-init-shcema
       author: ArtiFixal
       changes:
+
         # Users
         - createTable:
             tableName: users
@@ -74,11 +75,7 @@ databaseChangeLog:
                   constraints:
                     nullable: true
 
-  # Insert system for user ref
-  - changeSet:
-      id: 2
-      author: ArtiFixal
-      changes:
+        # Insert system for user ref
         - insert:
             tableName: users
             columns:
@@ -109,3 +106,21 @@ databaseChangeLog:
               - column:
                   name: created
                   valueComputed: current_datetime
+        
+        # Tags
+        - createTable:
+            tableName: tags
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: varchar(30)
+                  constraints:
+                    nullable: false
+                    unique: true
