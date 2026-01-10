@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/AuthStore'
 import LoginView from '@/views/LoginView.vue'
 import HomeView from '@/views/HomeView.vue'
+import TargetView from '@/views/TargetView.vue'
+import TargetDetailsView from '@/views/TargetDetailsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -15,6 +17,22 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: LoginView,
+    },
+    {
+      path: '/targets/:page?',
+      name: 'targets',
+      component: TargetView,
+      props: (route) => ({
+        page: parseInt(route.params.page as string) || 1,
+      }),
+    },
+    {
+      path: '/target/:id?',
+      name: 'target',
+      component: TargetDetailsView,
+      props: (route) => ({
+        id: parseInt(route.params.id as string),
+      }),
     },
   ],
 })

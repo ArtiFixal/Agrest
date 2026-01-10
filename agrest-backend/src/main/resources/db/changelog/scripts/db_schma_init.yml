@@ -124,3 +124,97 @@ databaseChangeLog:
                   constraints:
                     nullable: false
                     unique: true
+
+        # Targets
+        - createTable:
+            tableName: targets
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    unique: false
+              - column:
+                  name: name
+                  type: varchar(80)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: url
+                  type: varchar(256)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: swagger
+                  type: jsonb
+                  constraints:
+                    nullable: true
+              - column:
+                  name: headers
+                  type: jsonb
+                  defaultValue: "{}"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cookies
+                  type: jsonb
+                  defaultValue: "{}"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: creator_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: editor_id
+                  type: uuid
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created
+                  type: timestamp
+                  defaultValueComputed: current_datetime
+                  constraints:
+                    nullable: false
+              - column:
+                  name: edited
+                  type: timestamp
+                  constraints:
+                    nullable: true
+        
+        # Many-to-many targets-tags relationship
+        - createTable:
+            tableName: targets_tags
+            columns:
+              - column:
+                  name: target_id
+                  type: int
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: tag_id
+                  type: int
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: creator_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created
+                  type: timestamp
+                  defaultValueComputed: current_datetime
+                  constraints:
+                    nullable: false

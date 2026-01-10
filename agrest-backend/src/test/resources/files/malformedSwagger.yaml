@@ -1,0 +1,104 @@
+openapi: 3.0.3
+info:
+  title: Malformed API
+  description: An intentionally broken API specification with parsing errors
+  # Missing required 'version' field!
+servers:
+  - url: https://malformed.example.com/api
+paths:
+  /products:
+    get:
+      summary: Get products
+      # Missing 'responses' - REQUIRED field!
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+
+  /users/{userId}:
+    get:
+      summary: Get user by ID
+      parameters:
+        # Path parameter 'userId' has wrong 'in' value
+        - name: userId
+          in: body  # Should be 'path'!
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NonExistentSchema'  # Reference doesn't exist!
+
+  /orders:
+    post:
+      summary: Create order
+      requestBody:
+        required: yes  # Should be boolean true, not string 'yes'!
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+      responses:
+        201:
+          description: Created
+      security:
+        - undefinedAuth: []  # Security scheme not defined!
+
+  /invalid-path-{id:
+    # Malformed path - unclosed brace
+    get:
+      summary: Broken path
+      responses:
+        200:
+          description: OK
+
+  /dashboard:
+    get:
+      summary: Get dashboard
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: invalid_type  # Not a valid JSON schema type!
+                properties:
+                  data:
+                    type: string
+
+components:
+  schemas:
+    Order:
+      type: object
+      required:
+        - items
+        - totalAmount
+        - invalidField  # Required field not in properties!
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'  # Reference doesn't exist!
+        totalAmount:
+          type: number
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          # Missing 'type' field
+          format: email
+        age:
+          type: integer
+          minimum: 0
+          maximum: 50
+          minumum: 10  # Typo: 'minumum' instead of 'minimum' - creates conflict
+
+  # Missing 'securitySchemes' section but referenced in /orders endpoint!

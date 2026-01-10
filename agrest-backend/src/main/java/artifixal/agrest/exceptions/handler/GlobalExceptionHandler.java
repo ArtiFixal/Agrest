@@ -1,8 +1,9 @@
 package artifixal.agrest.exceptions.handler;
 
 import artifixal.agrest.dto.ErrorDTO;
-import artifixal.agrest.exceptions.CsrfTokenException;
 import artifixal.agrest.exceptions.EntityNotFoundException;
+import artifixal.agrest.exceptions.JsonPatchException;
+import artifixal.agrest.exceptions.page.PaginationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -44,9 +45,19 @@ public class GlobalExceptionHandler {
             .body(dto));
     }
 
-    public Mono<ResponseEntity<ErrorDTO>> handleCsrfTokenException(CsrfTokenException ex, ServerWebExchange exchange) {
+    @ExceptionHandler(JsonPatchException.class)
+    public Mono<ResponseEntity<ErrorDTO>> handleJsonPatchException(JsonPatchException ex, ServerWebExchange exchange) {
         ErrorDTO dto = new ErrorDTO(ex.getMessage());
-        return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN)
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(dto));
+    }
+
+    @ExceptionHandler(PaginationException.class)
+    public Mono<ResponseEntity<ErrorDTO>> handlePaginationException(
+        PaginationException ex,
+        ServerWebExchange exchange) {
+        ErrorDTO dto = new ErrorDTO(ex.getMessage());
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(dto));
     }
 }
