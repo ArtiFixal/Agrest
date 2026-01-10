@@ -2,6 +2,9 @@ networks:
   vault-network:
     driver: bridge
 
+volumes:
+  redis_data:
+
 services:
   vault:
     image: hashicorp/vault:1.21.1
@@ -10,8 +13,8 @@ services:
     # cap_add:
     #   - IPC_LOCK
     environment:
-      SKIP_SETCAP: 'true'
-      SKIP_CHOWN: 'true'
+      SKIP_SETCAP: "true"
+      SKIP_CHOWN: "true"
     ports:
       - "8200:8200"
     volumes:
@@ -47,3 +50,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+
+  redis:
+    image: redis:8.4.0
+    container_name: redis
+    hostname: redis
+    command: redis-server --requirepass password --bind 0.0.0.0
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - vault-network
