@@ -10,8 +10,8 @@ const authStore = useAuthStore()
   <aside v-if="authStore.isAuth">
     <AppSidebar />
   </aside>
-  <div class="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-    <div class="w-full max-w-sm">
+  <div class="flex min-h-svh w-full justify-center p-6 md:p-10">
+    <div class="w-full">
       <Toaster />
       <RouterView />
     </div>

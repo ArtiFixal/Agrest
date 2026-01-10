@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="flex h-full justify-center items-center">
     <Card class="w-full max-w-sm">
       <CardHeader class="text-center">
         <CardTitle class="text-xl">Login</CardTitle>
