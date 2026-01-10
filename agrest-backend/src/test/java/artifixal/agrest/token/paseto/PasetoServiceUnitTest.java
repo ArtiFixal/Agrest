@@ -16,6 +16,7 @@ import java.util.UUID;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,10 +36,14 @@ public class PasetoServiceUnitTest {
     private VaultService vaultService;
     private PasetoService pasetoService;
 
+    @BeforeAll
+    public static void beforeAll() {
+        Security.addProvider(new BouncyCastleProvider());
+    }
+
     @BeforeEach
     public void setUp() throws InvalidKeySpecException, NoSuchAlgorithmException {
         // Init data
-        Security.addProvider(new BouncyCastleProvider());
         final Versioned<KeyPairDTO> keys = Versioned.create(createKeyPair());
         // Mock key fetch
         when(vaultService.getPasetoKeys()).thenReturn(Mono.just(keys));
