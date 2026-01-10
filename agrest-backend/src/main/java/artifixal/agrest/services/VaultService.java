@@ -93,6 +93,7 @@ public class VaultService {
     }
 
     public Mono<Versioned<PepperDTO>> getPepper() {
-        return getOrFetch("agrest-app/pepper", PepperDTO.class);
+        return vaultTemplate.opsForVersionedKeyValue(keyValPath)
+            .get("agrest-app/pepper", PepperDTO.class);
     }
 }
