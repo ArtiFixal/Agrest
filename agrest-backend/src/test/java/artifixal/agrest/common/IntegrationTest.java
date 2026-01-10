@@ -3,13 +3,16 @@ package artifixal.agrest.common;
 import artifixal.agrest.auth.AuthenticationResultDTO;
 import artifixal.agrest.auth.CookieTokenPair;
 import artifixal.agrest.auth.LoginResult;
+import artifixal.agrest.auth.UserRole;
 import artifixal.agrest.dto.user.SecurePassword;
 import artifixal.agrest.dto.user.UserAuthenticationDTO;
 import artifixal.agrest.serializer.SecurePasswordSerializer;
 import artifixal.agrest.services.UserService;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import java.util.Collections;
 import java.util.Map;
+import java.util.UUID;
 import javax.net.ssl.SSLException;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +23,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.http.codec.json.JacksonJsonEncoder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.reactive.server.WebTestClient.ResponseSpec;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -271,5 +278,41 @@ public abstract class IntegrationTest {
             .returnResult();
         return result.getResponseCookies()
             .getFirst("csrf");
+    }
+
+    /**
+     * Adds context allowing the given {@code Mono} to run with specified user role.
+     * Task will be audited as the system user.
+     *
+     * @param <T> Mono return type.
+     * @param task Task to run with privileges.
+     * @param role Role to run with.
+     *
+     * @return Mono with the user role context applied.
+     */
+    protected <T> Mono<T> doAs(Mono<T> task, UserRole role) {
+        UsernamePasswordAuthenticationToken systemUser = createSystemUserAuth();
+        return task.contextWrite(ReactiveSecurityContextHolder.withAuthentication(systemUser));
+    }
+
+    /**
+     * Adds context allowing the given {@code Flux} to run with specified user role.
+     * Task will be audited as the system user.
+     *
+     * @param <T> Flux return type.
+     * @param task Task to run with privileges.
+     * @param role Role to run with.
+     *
+     * @return Flux with the user role context applied.
+     */
+    protected <T> Flux<T> doAs(Flux<T> task, UserRole role) {
+        UsernamePasswordAuthenticationToken systemUser = createSystemUserAuth();
+        return task.contextWrite(ReactiveSecurityContextHolder.withAuthentication(systemUser));
+    }
+
+    private UsernamePasswordAuthenticationToken createSystemUserAuth() {
+        UUID systemUserID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+        return UsernamePasswordAuthenticationToken.authenticated(systemUserID, null,
+            Collections.singleton(UserRole.ADMIN.toAuthority()));
     }
 }

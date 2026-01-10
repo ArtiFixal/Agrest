@@ -7,14 +7,10 @@ import artifixal.agrest.dto.user.SecurePassword;
 import artifixal.agrest.dto.user.UserCreationDTO;
 import artifixal.agrest.entity.User;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 
 /**
  * Tests user authentication at /v1/auth
@@ -73,12 +69,7 @@ public class AuthControllerIntegrationTest extends IntegrationTest {
             .build();
 
         // Write user as system
-        UUID systemUserID = UUID.fromString("00000000-0000-0000-0000-000000000000");
-        UsernamePasswordAuthenticationToken systemUser = UsernamePasswordAuthenticationToken
-            .authenticated(systemUserID, null, Collections.singleton(UserRole.ADMIN.toAuthority()));
-
-        return userService.createUser(user)
-            .contextWrite(ReactiveSecurityContextHolder.withAuthentication(systemUser))
+        return doAs(userService.createUser(user), UserRole.ADMIN)
             .block();
     }
 }
